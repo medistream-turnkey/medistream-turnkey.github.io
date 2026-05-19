@@ -1166,22 +1166,20 @@ const GROUPS = [
         { label:'해부학 모형',               eg:'척추 모형, 경혈 인체모형, 근육 모형', cats:["해부학 모형"] },
     ] },
     { key:'appliance',  label:'가전 / 가구',   hasPackage:false, subs:[
-        { label:'가전·가구',                 eg:'온열기, 공기청정기, 진료의자, 데스크, 안마의자', cats:["가전/가구","가구"] },
+        { label:'가전·가구',                 eg:'워시타워, 온열기, 공기청정기, 진료의자, 안마의자', cats:["가전/가구","가구"] },
     ] },
     { key:'clothing',   label:'의류',          hasPackage:false, subs:[
-        { label:'의료 의류·잡화 (가운·스크럽 등)', eg:'의료가운, 스크럽, 환자복, 의료화, 명찰', cats:["의류/잡화"] },
+        { label:'의료 의류·잡화 (가운·스크럽 등)', eg:'의료가운, 스크럽, 환자복, 신발', cats:["의류/잡화"] },
     ] },
     { key:'onyang',     label:'원탕',          hasPackage:false, subs:[
         { label:'한약재',                    eg:'당귀, 황기, 감초 등 약재', cats:["한약재"] },
         { label:'탕전실 용품',               eg:'한약 파우치, 포장지, 탕전 기구', cats:["탕전실 용품"] },
-        { label:'약속처방 (한약 과립·약침)', eg:'산청 과립제, 약침액', cats:["약속처방(산청1)","약속처방(산청2)","약속처방(약침)"] },
     ] },
     { key:'book',       label:'도서',          hasPackage:false, subs:[
         { label:'도서',                      eg:'근골격계·침구·본초·개원 실무 도서', cats:["도서"] },
     ] },
     { key:'counsel',    label:'상담자료',      hasPackage:false, subs:[
-        { label:'디자인 제작물',             eg:'진료 안내물, 명함, 배너 디자인', cats:["디자인"] },
-        { label:'홍보물 (리플렛·포스터 등)', eg:'리플렛, 포스터, 환자 교육자료', cats:["홍보물(B2D)"] },
+        { label:'디자인',                    eg:'캘리디자인', cats:["디자인"] },
     ] }
 ];
 const GROUP_BY_KEY = Object.fromEntries(GROUPS.map(g => [g.key, g]));
