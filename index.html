@@ -179,6 +179,33 @@
         }
         .btn-secondary:hover { background: var(--accent-light); }
 
+        /* 표지 — 혜택/안내 강조 버튼 */
+        .info-cta-btn {
+            width: 100%;
+            margin-top: 16px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+            color: #1B2A4A;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 6px 20px rgba(245,158,11,0.45);
+            transition: transform 0.15s, box-shadow 0.2s;
+            animation: infoPulse 2.2s ease-in-out infinite;
+        }
+        .info-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(245,158,11,0.6);
+            animation: none;
+        }
+        @keyframes infoPulse {
+            0%, 100% { box-shadow: 0 6px 20px rgba(245,158,11,0.40); }
+            50%      { box-shadow: 0 6px 26px rgba(245,158,11,0.75); }
+        }
+
         .btn-group { display: flex; gap: 12px; margin-top: 24px; }
         .btn-group .btn-back {
             flex: 0 0 auto;
@@ -813,9 +840,7 @@
         <button class="btn-primary" id="startBtn" onclick="startFresh()">
             예상 견적 짜보기
         </button>
-        <div style="margin-top:14px;">
-            <a onclick="openInfo('landing')" style="display:inline-block; color:rgba(255,255,255,0.85); font-size:14px; font-weight:600; text-decoration:underline; cursor:pointer;">💡 구매 혜택 · 배송 안내 · 추천상품 보기</a>
-        </div>
+        <button onclick="openInfo('landing')" class="info-cta-btn">💡 구매 혜택 · 배송 안내 · 추천상품 보기</button>
     </div>
 </div>
 
