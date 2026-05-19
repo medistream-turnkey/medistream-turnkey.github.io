@@ -843,21 +843,21 @@
             <div class="input-group">
                 <label>1인실 베드 수 <span style="color:var(--danger);">*</span></label>
                 <div class="input-wrapper">
-                    <input type="number" id="bed1" value="2" min="0" oninput="calcScale(); validateStep1();">
+                    <input type="number" id="bed1" value="" min="0" placeholder="예: 2" oninput="calcScale(); validateStep1();">
                     <span class="unit">개</span>
                 </div>
             </div>
             <div class="input-group">
                 <label>2인실 베드 수 (룸 단위) <span style="color:var(--danger);">*</span></label>
                 <div class="input-wrapper">
-                    <input type="number" id="bed2" value="3" min="0" oninput="calcScale(); validateStep1();">
+                    <input type="number" id="bed2" value="" min="0" placeholder="예: 3" oninput="calcScale(); validateStep1();">
                     <span class="unit">개</span>
                 </div>
             </div>
             <div class="input-group">
                 <label>예상 직원 수 (실장·간호 포함) <span style="color:var(--text-secondary);font-weight:400;">(선택)</span></label>
                 <div class="input-wrapper">
-                    <input type="number" id="staff" value="4" min="0" oninput="calcScale()">
+                    <input type="number" id="staff" value="" min="0" placeholder="예: 4 (선택)" oninput="calcScale()">
                     <span class="unit">명</span>
                 </div>
             </div>
@@ -961,8 +961,8 @@
 
         <div class="card">
             <div class="card-header">STEP 4</div>
-            <h2>세부 카테고리를<br>확인해주세요</h2>
-            <p class="desc">선택하신 카테고리에 해당하는 상품 분류입니다. 불필요한 항목은 해제하세요. <span class="info-badge" id="subCatBadge">0개 선택</span></p>
+            <h2>세부 카테고리를<br>선택해주세요</h2>
+            <p class="desc">선택하신 카테고리의 상품 분류입니다. 필요한 항목을 선택하세요. <span class="info-badge" id="subCatBadge">0개 선택</span></p>
             <div id="subCatSelect"></div>
         </div>
 
@@ -1086,11 +1086,11 @@ const GROUP_BY_KEY = Object.fromEntries(GROUPS.map(g => [g.key, g]));
 
 // ===== State =====
 const state = {
-    bed1: 2, bed2: 3, staff: 4,
+    bed1: '', bed2: '', staff: '',
     totalBeds: 0, totalRooms: 0,
-    selectedGroups: [],          // step2: group key 배열
-    amounts: {},                 // step3: { groupKey: {mode:'package'|'custom', pkg, value} }
-    deselectedCats: [],          // step4: 사용자가 끈 구카테고리명
+    selectedGroups: [],          // step2: group key 배열 (기본 미선택)
+    amounts: {},                 // step3: { groupKey: {mode:'package'|'custom', pkg, value} } (기본 미선택)
+    selectedCats: [],            // step4: 사용자가 켠 구카테고리명 (기본 미선택)
     contact: ''                  // step5: 성함/병원명
 };
 
@@ -1105,16 +1105,16 @@ function goToStep(stepId) {
 }
 // 전체 초기화 — 입력값/선택 전부 태초 상태로
 function resetAll() {
-    state.bed1 = 2; state.bed2 = 3; state.staff = 4;
+    state.bed1 = ''; state.bed2 = ''; state.staff = '';
     state.totalBeds = 0; state.totalRooms = 0;
     state.selectedGroups = [];
     state.amounts = {};
-    state.deselectedCats = [];
+    state.selectedCats = [];
     state.contact = '';
 
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
     set('contactInfo', '');
-    set('bed1', 2); set('bed2', 3); set('staff', 4);
+    set('bed1', ''); set('bed2', ''); set('staff', '');
 
     // STEP5 전송 UI 초기화
     const sb = document.getElementById('sendBtn');
@@ -1172,7 +1172,7 @@ function renderGroupSelect() {
 function toggleGroup(key) {
     const i = state.selectedGroups.indexOf(key);
     if (i >= 0) state.selectedGroups.splice(i, 1);
-    else { state.selectedGroups.push(key); if (!state.amounts[key]) state.amounts[key] = GROUP_BY_KEY[key].hasPackage ? {mode:'package', pkg:'basic'} : {mode:'custom', value:null}; }
+    else { state.selectedGroups.push(key); }  // 금액은 STEP3에서 직접 선택 (기본 미선택)
     renderGroupSelect();
 }
 
@@ -1246,7 +1246,7 @@ function candidateCats() {
     return list;
 }
 function activeCats() {
-    return candidateCats().filter(c => !state.deselectedCats.includes(c));
+    return candidateCats().filter(c => state.selectedCats.includes(c));
 }
 function renderSubCats() {
     const wrap = document.getElementById('subCatSelect');
@@ -1254,10 +1254,10 @@ function renderSubCats() {
     GROUPS.filter(g => state.selectedGroups.includes(g.key)).forEach(g => {
         html += `<div style="font-size:14px;font-weight:800;color:var(--accent);margin:16px 0 8px;">${g.label}</div>`;
         html += `<div class="split-cards">` + g.cats.map(c => {
-            const on = !state.deselectedCats.includes(c);
+            const on = state.selectedCats.includes(c);
             return `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.5;'}" onclick="toggleSubCat('${c.replace(/'/g,"\\'")}')">
                 <div><div class="label">${c}</div></div>
-                <div class="value">${on ? '✓ 포함' : '제외'}</div>
+                <div class="value">${on ? '✓ 포함' : '선택'}</div>
             </div>`;
         }).join('') + `</div>`;
     });
@@ -1265,9 +1265,9 @@ function renderSubCats() {
     updateSubCatBadge();
 }
 function toggleSubCat(name) {
-    const i = state.deselectedCats.indexOf(name);
-    if (i >= 0) state.deselectedCats.splice(i, 1);
-    else state.deselectedCats.push(name);
+    const i = state.selectedCats.indexOf(name);
+    if (i >= 0) state.selectedCats.splice(i, 1);
+    else state.selectedCats.push(name);
     renderSubCats();
 }
 function updateSubCatBadge() {
@@ -1281,7 +1281,7 @@ function showResults() {
     if (cats.length === 0) return;
     document.getElementById('resultScale').textContent = state.totalBeds + ' / ' + state.totalRooms;
     document.getElementById('resultBedDetail').textContent = `1인실 ${state.bed1} · 2인실 ${state.bed2}`;
-    document.getElementById('resultStaff').textContent = state.staff + '명';
+    document.getElementById('resultStaff').textContent = state.staff ? state.staff + '명' : '미입력';
     document.getElementById('resultGrpCount').textContent = state.selectedGroups.length + '개';
     document.getElementById('resultCatCount').textContent = cats.length + '개';
     if (state.contact) {
@@ -1301,7 +1301,7 @@ function showResults() {
     document.getElementById('selectedCatList').innerHTML = GROUPS
         .filter(g => state.selectedGroups.includes(g.key))
         .map(g => {
-            const items = g.cats.filter(c => !state.deselectedCats.includes(c));
+            const items = g.cats.filter(c => state.selectedCats.includes(c));
             if (items.length === 0) return '';
             return `<div class="action-item"><div class="action-dot"></div><div class="action-text"><strong>${g.label}</strong> <span style="color:var(--text-secondary);font-weight:400;">${items.join(' · ')}</span></div></div>`;
         }).join('');
@@ -1315,14 +1315,14 @@ function buildSlackMessage() {
     L.push('🏥 *턴키 개원 설문 접수*');
     if (state.contact) L.push('👤 *' + honorific(state.contact) + '*');
     L.push(`• 규모: 1인실 ${state.bed1} · 2인실 ${state.bed2}  →  총 ${state.totalBeds}베드 / ${state.totalRooms}룸`);
-    L.push(`• 직원: ${state.staff}명`);
+    L.push(`• 직원: ${state.staff ? state.staff + '명' : '미입력'}`);
     L.push('• 카테고리별 예상금액:');
     GROUPS.filter(g => state.selectedGroups.includes(g.key)).forEach(g => {
         L.push(`    - ${g.label}: ${amountText(g.key)}`);
     });
     L.push('• 확정 세부 카테고리:');
     GROUPS.filter(g => state.selectedGroups.includes(g.key)).forEach(g => {
-        const items = g.cats.filter(c => !state.deselectedCats.includes(c));
+        const items = g.cats.filter(c => state.selectedCats.includes(c));
         if (items.length) L.push(`    - ${g.label}: ${items.join(' · ')}`);
     });
     const now = new Date();
@@ -1336,7 +1336,7 @@ function buildDetail() {
         staff: state.staff ? (state.staff + '명') : '미입력',
         amounts: sel.map(g => `${g.label}: ${amountText(g.key)}`).join(' / '),
         cats: sel.map(g => {
-            const items = g.cats.filter(c => !state.deselectedCats.includes(c));
+            const items = g.cats.filter(c => state.selectedCats.includes(c));
             return items.length ? `${g.label}(${items.join('·')})` : '';
         }).filter(Boolean).join(' / ')
     };
