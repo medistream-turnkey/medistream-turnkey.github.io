@@ -1,3 +1,6 @@
 relay.gs
 카테고리매핑.csv
 _*.html
+node_modules
+package.json
+package-lock.json
