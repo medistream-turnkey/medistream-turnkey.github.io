@@ -1158,30 +1158,30 @@ const CAT_COUNT = {
 // ===== 상위 카테고리 → 구카테고리 매핑 (사용자 지정, 2026-05-18) =====
 const GROUPS = [
     { key:'consumable', label:'소모품 / 비품', hasPackage:true, subs:[
-        { label:'소모품 (침·주사기·부항 등)', cats:["소모품"] },
-        { label:'치료실 물품',               cats:["치료실 물품"] },
-        { label:'생활·일반 용품',            cats:["생활","일반물품"] },
-        { label:'의약품·의약외품',           cats:["의약품","의약외품"] },
-        { label:'재활 용품',                 cats:["재활 용품"] },
-        { label:'해부학 모형',               cats:["해부학 모형"] },
+        { label:'소모품 (침·주사기·부항 등)', eg:'침, 일회용 주사기, 부항컵, 알콜솜, 거즈', cats:["소모품"] },
+        { label:'치료실 물품',               eg:'베드시트, 베개커버, 위생가운, 멸균팩', cats:["치료실 물품"] },
+        { label:'생활·일반 용품',            eg:'손소독제, 종이컵, 휴지, 청소용품', cats:["생활","일반물품"] },
+        { label:'의약품·의약외품',           eg:'소독약, 파스, 밴드, 마스크', cats:["의약품","의약외품"] },
+        { label:'재활 용품',                 eg:'찜질팩, 보호대, 운동밴드, 폼롤러', cats:["재활 용품"] },
+        { label:'해부학 모형',               eg:'척추 모형, 경혈 인체모형, 근육 모형', cats:["해부학 모형"] },
     ] },
     { key:'appliance',  label:'가전 / 가구',   hasPackage:false, subs:[
-        { label:'가전·가구',                 cats:["가전/가구","가구"] },
+        { label:'가전·가구',                 eg:'온열기, 공기청정기, 진료의자, 데스크, 안마의자', cats:["가전/가구","가구"] },
     ] },
     { key:'clothing',   label:'의류',          hasPackage:false, subs:[
-        { label:'의료 의류·잡화 (가운·스크럽 등)', cats:["의류/잡화"] },
+        { label:'의료 의류·잡화 (가운·스크럽 등)', eg:'의료가운, 스크럽, 환자복, 의료화, 명찰', cats:["의류/잡화"] },
     ] },
     { key:'onyang',     label:'원탕',          hasPackage:false, subs:[
-        { label:'한약재',                    cats:["한약재"] },
-        { label:'탕전실 용품',               cats:["탕전실 용품"] },
-        { label:'약속처방 (한약 과립·약침)', cats:["약속처방(산청1)","약속처방(산청2)","약속처방(약침)"] },
+        { label:'한약재',                    eg:'당귀, 황기, 감초 등 약재', cats:["한약재"] },
+        { label:'탕전실 용품',               eg:'한약 파우치, 포장지, 탕전 기구', cats:["탕전실 용품"] },
+        { label:'약속처방 (한약 과립·약침)', eg:'산청 과립제, 약침액', cats:["약속처방(산청1)","약속처방(산청2)","약속처방(약침)"] },
     ] },
     { key:'book',       label:'도서',          hasPackage:false, subs:[
-        { label:'도서',                      cats:["도서"] },
+        { label:'도서',                      eg:'근골격계·침구·본초·개원 실무 도서', cats:["도서"] },
     ] },
     { key:'counsel',    label:'상담자료',      hasPackage:false, subs:[
-        { label:'디자인 제작물',             cats:["디자인"] },
-        { label:'홍보물 (리플렛·포스터 등)', cats:["홍보물(B2D)"] },
+        { label:'디자인 제작물',             eg:'진료 안내물, 명함, 배너 디자인', cats:["디자인"] },
+        { label:'홍보물 (리플렛·포스터 등)', eg:'리플렛, 포스터, 환자 교육자료', cats:["홍보물(B2D)"] },
     ] }
 ];
 const GROUP_BY_KEY = Object.fromEntries(GROUPS.map(g => [g.key, g]));
@@ -1369,8 +1369,8 @@ function renderSubCats() {
         html += `<div class="split-cards">` + g.subs.map((s, idx) => {
             const on = subOn(s);
             return `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.5;'}" onclick="toggleSub('${g.key}',${idx})">
-                <div><div class="label">${s.label}</div></div>
-                <div class="value">${on ? '✓ 포함' : '선택'}</div>
+                <div style="flex:1; min-width:0;"><div class="label">${s.label}</div>${s.eg ? `<div style="font-size:12px; color:var(--text-secondary); font-weight:400; margin-top:3px;">예: ${s.eg}</div>` : ''}</div>
+                <div class="value" style="flex-shrink:0;">${on ? '✓ 포함' : '선택'}</div>
             </div>`;
         }).join('') + `</div>`;
     });
