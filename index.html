@@ -1248,12 +1248,10 @@ function openInfo(ret) { infoReturnStep = ret || 'landing'; goToStep('info'); }
 function closeInfo() { goToStep(infoReturnStep); }
 
 // 추천 상품 미리보기 (선택 세부 카테고리 판매 TOP) — 상품명+링크만
-let PREVIEW = null;
+// 매번 fetch (메모리 캐시 X) — daily-sync로 매일 새 preview-top.json 배포되므로 즉시 반영
 async function loadPreview() {
-    if (PREVIEW) return PREVIEW;
-    const res = await fetch('preview-top.json', { cache: 'no-store' });
-    PREVIEW = await res.json();
-    return PREVIEW;
+    const res = await fetch('preview-top.json?t=' + Date.now(), { cache: 'no-store' });
+    return await res.json();
 }
 async function openPreview() {
     let data;
