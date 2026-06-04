@@ -1468,7 +1468,7 @@ function buildSlackMessage() {
     const L = [];
     L.push('🏥 *턴키 개원 설문 접수*');
     if (state.contact) L.push('👤 *' + honorific(state.contact) + '*');
-    if (state.clinic) L.push('🏥 ' + state.clinic);
+    if (state.clinic) L.push('📍 한의원: ' + state.clinic);
     if (state.openDate) L.push('📅 개원 예정일: ' + state.openDate);
     L.push(`• 규모: 1인실 ${state.bed1} · 2인실 ${state.bed2}  →  총 ${state.totalBeds}베드 / ${state.totalRooms}룸`);
     L.push(`• 직원: ${state.staff ? state.staff + '명' : '미입력'}`);
