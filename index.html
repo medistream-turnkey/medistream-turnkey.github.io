@@ -365,6 +365,17 @@
             color: var(--text-secondary);
             font-weight: 400;
         }
+        .demo-toggle {
+            margin-top: 6px; font-size: 12px; font-weight: 600;
+            color: var(--accent); background: none; border: none; padding: 0; cursor: pointer;
+        }
+        .demo-panel { display: flex; flex-wrap: wrap; gap: 10px; padding: 2px; }
+        .demo-panel figure { margin: 0; flex: 1 1 220px; }
+        .demo-panel video {
+            width: 100%; border-radius: 8px; border: 1px solid var(--border);
+            background: #000; display: block;
+        }
+        .demo-panel figcaption { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-align: center; }
         .split-card.insurance { border-color: #3B82F6; background: #EFF6FF; }
         .split-card.insurance .value { color: #2563EB; }
         .split-card.non-insurance { border-color: #8B5CF6; background: #F5F3FF; }
@@ -1198,7 +1209,9 @@ const GROUPS = [
     { key:'book',       label:'도서',          hasPackage:false, subs:[
         { label:'도서',                      eg:'근골격계·침구·본초·개원 실무 도서', cats:["도서"] },
     ] },
-    { key:'counsel',    label:'상담자료', display:'상담/대기실용 비치 자료, 티칭지, 원내포스터', hasPackage:false, subs:[
+    { key:'counsel',    label:'상담자료', display:'상담/대기실용 비치 자료, 티칭지, 원내포스터', hasPackage:false,
+        demos:[ { src:'callidesign-demo1.mp4', cap:'태블릿 상담자료 — 목차·티칭지' }, { src:'callidesign-demo2.mp4', cap:'증상별 자가진단 자료' } ],
+        subs:[
         { label:'디자인',                    eg:'캘리디자인', cats:["디자인"] },
     ] }
 ];
@@ -1329,13 +1342,26 @@ function renderGroupSelect() {
     const wrap = document.getElementById('groupSelect');
     wrap.innerHTML = GROUPS.map(g => {
         const on = state.selectedGroups.includes(g.key);
-        return `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.55;'}" onclick="toggleGroup('${g.key}')">
-            <div><div class="label">${g.display || g.label}</div></div>
+        const toggle = g.demos ? `<button type="button" class="demo-toggle" onclick="event.stopPropagation(); toggleDemos('${g.key}', this)">📺 예시 보기 ▼</button>` : '';
+        const card = `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.55;'}" onclick="toggleGroup('${g.key}')">
+            <div><div class="label">${g.display || g.label}</div>${toggle}</div>
             <div class="value">${on ? '✓ 선택' : '선택'}</div>
         </div>`;
+        if (!g.demos) return card;
+        const vids = g.demos.map(d => `<figure><video muted loop playsinline preload="none" src="${d.src}"></video><figcaption>${d.cap || ''}</figcaption></figure>`).join('');
+        return card + `<div class="demo-panel" id="demoPanel-${g.key}" style="display:none">${vids}</div>`;
     }).join('');
     document.getElementById('grpCountBadge').textContent = state.selectedGroups.length + '개 선택';
     document.getElementById('step2Next').disabled = state.selectedGroups.length === 0;
+}
+// 예시 데모 영상 펼침/접힘 (펼칠 때만 로드·재생 — 평소 트래픽 0)
+function toggleDemos(key, btn) {
+    const panel = document.getElementById('demoPanel-' + key);
+    if (!panel) return;
+    const open = panel.style.display === 'none';
+    panel.style.display = open ? 'flex' : 'none';
+    if (btn) btn.textContent = open ? '📺 예시 접기 ▲' : '📺 예시 보기 ▼';
+    panel.querySelectorAll('video').forEach(v => { if (open) v.play().catch(() => {}); else v.pause(); });
 }
 function toggleGroup(key) {
     const i = state.selectedGroups.indexOf(key);
