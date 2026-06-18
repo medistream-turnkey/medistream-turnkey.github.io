@@ -1183,6 +1183,14 @@ const GROUPS = [
     { key:'clothing',   label:'의류',          hasPackage:false, subs:[
         { label:'의료 의류·잡화 (가운·스크럽 등)', eg:'의료가운, 스크럽, 환자복, 신발', cats:["의류/잡화"] },
     ] },
+    { key:'skin',       label:'피부미용',       hasPackage:false, subs:[
+        // 구카테고리가 없는 노출카테고리(피부/미용, 2025-10 신설) 기반. cats=표시·선택용 합성토큰, cur=미리보기용 노출카테고리ID
+        { label:'스킨부스터·매선',           eg:'스킨부스터, 매선(실)', cats:["피부미용-스킨부스터·매선"], cur:["68f846616fe3bd5ef24db850","68f846726ecccb82c28b6e66"] },
+        { label:'필러·보톡스·필링·팩',       eg:'필러, 보톡스, 필링제, 마스크팩', cats:["피부미용-필러·보톡스·필링·팩"], cur:["68f84667ce8c2c36eea26eb6","68f8466dd45f6a5651d735d0","68f8469fd089c77458e92349"] },
+        { label:'더마 코스메틱',             eg:'기능성 화장품, 재생크림, 홈케어', cats:["피부미용-더마 코스메틱"], cur:["68f84658ce8c2c36eea26eb5"] },
+        { label:'미용 장비 (레이저·RF·HIFU·MTS)', eg:'레이저, 고주파, HIFU, 뷰티 디바이스, MTS', cats:["피부미용-미용 장비"], cur:["68f846918aaef46a2befd98a","68f8468ced0b8aa900b5fad3","68f846865e70ec769528a948","68f846778aaef46a2befd989"] },
+        { label:'시술 소모품·소독',          eg:'주사기, 캐뉼라, 소독제, 피부미용 소품', cats:["피부미용-시술 소모품·소독"], cur:["68f846a4c9c8d6c551d88b66","68f846a972ca7c1b529fdbe2","68f846965e70ec769528a949","68f8469a27cdd563a48062ac"] },
+    ] },
     { key:'onyang',     label:'원내탕전',       hasPackage:false, subs:[
         { label:'한약재',                    eg:'당귀, 황기, 감초 등 약재', cats:["한약재"] },
         { label:'탕전실 용품',               eg:'한약 파우치, 포장지, 탕전 기구', cats:["탕전실 용품"] },
