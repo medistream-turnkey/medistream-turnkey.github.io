@@ -1198,7 +1198,7 @@ const GROUPS = [
     { key:'book',       label:'도서',          hasPackage:false, subs:[
         { label:'도서',                      eg:'근골격계·침구·본초·개원 실무 도서', cats:["도서"] },
     ] },
-    { key:'counsel',    label:'상담자료',      hasPackage:false, subs:[
+    { key:'counsel',    label:'상담자료', display:'상담/대기실용 비치 자료, 티칭지, 원내포스터', hasPackage:false, subs:[
         { label:'디자인',                    eg:'캘리디자인', cats:["디자인"] },
     ] }
 ];
@@ -1281,7 +1281,7 @@ async function openPreview() {
             const list = data[s.label] || [];
             if (!list.length) return;
             any = true;
-            html += `<div class="action-items"><div class="pv-group">${g.label} · ${s.label}</div>`;
+            html += `<div class="action-items"><div class="pv-group">${g.display || g.label} · ${s.label}</div>`;
             list.forEach((it, i) => {
                 html += `<div class="pv-item"><span class="pv-rank">${i + 1}</span><a href="${it.u}" target="_blank" rel="noopener">${it.n}</a><span class="pv-url">${it.u}</span></div>`;
             });
@@ -1330,7 +1330,7 @@ function renderGroupSelect() {
     wrap.innerHTML = GROUPS.map(g => {
         const on = state.selectedGroups.includes(g.key);
         return `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.55;'}" onclick="toggleGroup('${g.key}')">
-            <div><div class="label">${g.label}</div></div>
+            <div><div class="label">${g.display || g.label}</div></div>
             <div class="value">${on ? '✓ 선택' : '선택'}</div>
         </div>`;
     }).join('');
@@ -1438,7 +1438,7 @@ function showResults() {
 
     let rows = '';
     GROUPS.filter(g => state.selectedGroups.includes(g.key)).forEach(g => {
-        rows += `<tr><td><strong>${g.label}</strong></td><td style="text-align:right">${amountText(g.key)}</td></tr>`;
+        rows += `<tr><td><strong>${g.display || g.label}</strong></td><td style="text-align:right">${amountText(g.key)}</td></tr>`;
     });
     document.getElementById('summaryBody').innerHTML = rows;
 
@@ -1447,7 +1447,7 @@ function showResults() {
         .map(g => {
             const items = groupCats(g).filter(c => state.selectedCats.includes(c));
             if (items.length === 0) return '';
-            return `<div class="action-item"><div class="action-dot"></div><div class="action-text"><strong>${g.label}</strong> <span style="color:var(--text-secondary);font-weight:400;">${items.join(' · ')}</span></div></div>`;
+            return `<div class="action-item"><div class="action-dot"></div><div class="action-text"><strong>${g.display || g.label}</strong> <span style="color:var(--text-secondary);font-weight:400;">${items.join(' · ')}</span></div></div>`;
         }).join('');
 
     // 요청사항 영역 — 입력된 게 있을 때만 표시
