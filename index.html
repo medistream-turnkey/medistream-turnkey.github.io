@@ -987,7 +987,7 @@
 
         <div class="btn-group">
             <button class="btn-back" onclick="goToStep('step1')">이전</button>
-            <button class="btn-primary" id="step2Next" onclick="goToStep('step3')" disabled>다음: 세부 카테고리</button>
+            <button class="btn-primary" id="step2Next" onclick="goToStep('step3')" disabled>다음: 포함 항목 확인</button>
         </div>
     </div>
 </div>
@@ -1007,8 +1007,8 @@
 
         <div class="card">
             <div class="card-header">STEP 3</div>
-            <h2>세부 카테고리를<br>선택해주세요</h2>
-            <p class="desc">선택하신 카테고리의 상품 분류입니다. 필요한 항목을 선택하세요. <span class="info-badge" id="subCatBadge">0개 선택</span></p>
+            <h2>이런 항목들이<br>포함됩니다</h2>
+            <p class="desc">선택하신 카테고리에 이런 상품 분류가 담깁니다. 따로 고르지 않으셔도 되고, 참고만 하시면 됩니다. <span class="info-badge" id="subCatBadge">0개 항목</span></p>
             <div id="subCatSelect"></div>
         </div>
 
@@ -1054,7 +1054,7 @@
                 <div class="ri-sub">상위 분류</div>
             </div>
             <div class="result-item">
-                <div class="ri-label">세부 카테고리</div>
+                <div class="ri-label">포함 항목</div>
                 <div class="ri-value" id="resultCatCount">0개</div>
                 <div class="ri-sub">주문서 준비 대상</div>
             </div>
@@ -1066,7 +1066,7 @@
         </div>
 
         <div class="action-items">
-            <h3>🗂️ 확정 세부 카테고리</h3>
+            <h3>🗂️ 포함되는 세부 항목</h3>
             <div id="selectedCatList"></div>
         </div>
 
@@ -1400,20 +1400,21 @@ function josaEunNeun(w) {
     if (c >= 0xAC00 && c <= 0xD7A3) return ((c - 0xAC00) % 28) === 0 ? '는' : '은';
     return '는';
 }
+// 선택 UI 폐지(2026-07-21) — 원장님이 고르는 화면이 아니라 "이런 게 포함된다" 안내 화면.
+// 세부 선택은 산출물에 영향 없음(봇 parseSurveyRow는 카테고리별금액 블록만 사용) → 내부적으로 전량 ON 유지
+// 해서 시트 세부카테고리 컬럼 / 추천 상품 미리보기는 기존과 동일하게 동작.
+function syncAllCats() {
+    state.selectedCats = candidateCats();
+}
 function renderSubCats() {
+    syncAllCats();
     const wrap = document.getElementById('subCatSelect');
     let html = '';
     GROUPS.filter(g => state.selectedGroups.includes(g.key)).forEach(g => {
         html += `<div style="font-size:14px;font-weight:800;color:var(--accent);margin:16px 0 8px;">${g.label}</div>`;
-        html += `<div class="split-cards">` + g.subs.map((s, idx) => {
-            const on = subOn(s);
-            const card = `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.5;'}" onclick="toggleSub('${g.key}',${idx})">
+        html += `<div class="split-cards">` + g.subs.map(s => `<div class="split-card insurance">
                 <div style="flex:1; min-width:0;"><div class="label">${s.label}</div>${s.eg ? `<div style="font-size:12px; color:var(--text-secondary); font-weight:400; margin-top:3px;">예: ${s.eg}</div>` : ''}</div>
-                <div class="value" style="flex-shrink:0;">${on ? '✓ 포함' : '선택'}</div>
-            </div>`;
-            // 요청사항 textarea 제거(2026-07-21) — state.subRequests/setSubRequest 등 나머지 로직은 복구 대비 보존
-            return card;
-        }).join('') + `</div>`;
+            </div>`).join('') + `</div>`;
     });
     wrap.innerHTML = html;
     updateSubCatBadge();
@@ -1434,8 +1435,8 @@ function setSubRequest(key, val) {
     // 재렌더링하지 않음 — textarea의 포커스/커서 유지
 }
 function updateSubCatBadge() {
-    document.getElementById('subCatBadge').textContent = selectedSubCount() + '개 선택';
-    document.getElementById('step3Next').disabled = activeCats().length === 0;
+    document.getElementById('subCatBadge').textContent = selectedSubCount() + '개 항목';
+    document.getElementById('step3Next').disabled = state.selectedGroups.length === 0;
 }
 
 // ===== Step 5: 참고용 요약 =====
