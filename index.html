@@ -1198,7 +1198,7 @@ const GROUPS = [
     { key:'skin',       label:'피부미용',       hasPackage:false, subs:[
         // 구카테고리가 없는 노출카테고리(피부/미용, 2025-10 신설) 기반. cats=표시·선택용 합성토큰, cur=미리보기용 노출카테고리ID
         { label:'스킨부스터·매선',           eg:'스킨부스터, 매선(실)', cats:["피부미용-스킨부스터·매선"], cur:["68f846616fe3bd5ef24db850","68f846726ecccb82c28b6e66"] },
-        { label:'필러·보톡스·필링·팩',       eg:'필러, 보톡스, 필링제, 마스크팩', cats:["피부미용-필러·보톡스·필링·팩"], cur:["68f84667ce8c2c36eea26eb6","68f8466dd45f6a5651d735d0","68f8469fd089c77458e92349"] },
+        { label:'필링·팩',                   eg:'필링제, 마스크팩', cats:["피부미용-필링·팩"], cur:["68f8466dd45f6a5651d735d0","68f8469fd089c77458e92349"] },
         { label:'더마 코스메틱',             eg:'기능성 화장품, 재생크림, 홈케어', cats:["피부미용-더마 코스메틱"], cur:["68f84658ce8c2c36eea26eb5"] },
         { label:'미용 장비 (레이저·RF·HIFU·MTS)', eg:'레이저, 고주파, HIFU, 뷰티 디바이스, MTS', cats:["피부미용-미용 장비"], cur:["68f846918aaef46a2befd98a","68f8468ced0b8aa900b5fad3","68f846865e70ec769528a948","68f846778aaef46a2befd989"] },
         { label:'시술 소모품·소독',          eg:'주사기, 캐뉼라, 소독제, 피부미용 소품', cats:["피부미용-시술 소모품·소독"], cur:["68f846a4c9c8d6c551d88b66","68f846a972ca7c1b529fdbe2","68f846965e70ec769528a949","68f8469a27cdd563a48062ac"] },
@@ -1407,20 +1407,12 @@ function renderSubCats() {
         html += `<div style="font-size:14px;font-weight:800;color:var(--accent);margin:16px 0 8px;">${g.label}</div>`;
         html += `<div class="split-cards">` + g.subs.map((s, idx) => {
             const on = subOn(s);
-            const reqKey = `${g.key}_${idx}`;
-            const reqVal = escAttr(state.subRequests[reqKey] || '');
-            const firstEg = s.eg ? s.eg.split(/[,·]/)[0].trim() : '';
-            const placeholder = escAttr(firstEg
-                ? `요청사항이 있으시다면 작성부탁드립니다. (예: ${firstEg}${josaEunNeun(firstEg)} 넣어주세요!)`
-                : '요청사항이 있으시다면 작성부탁드립니다.');
             const card = `<div class="split-card ${on ? 'insurance' : ''}" style="cursor:pointer; ${on ? '' : 'opacity:0.5;'}" onclick="toggleSub('${g.key}',${idx})">
                 <div style="flex:1; min-width:0;"><div class="label">${s.label}</div>${s.eg ? `<div style="font-size:12px; color:var(--text-secondary); font-weight:400; margin-top:3px;">예: ${s.eg}</div>` : ''}</div>
                 <div class="value" style="flex-shrink:0;">${on ? '✓ 포함' : '선택'}</div>
             </div>`;
-            const textarea = on
-                ? `<textarea rows="2" placeholder="${placeholder}" oninput="setSubRequest('${reqKey}', this.value)" style="width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; line-height:1.5; resize:vertical; margin:-4px 0 0; background:var(--bg-secondary,#fafbfc); color:inherit;">${reqVal}</textarea>`
-                : '';
-            return card + textarea;
+            // 요청사항 textarea 제거(2026-07-21) — state.subRequests/setSubRequest 등 나머지 로직은 복구 대비 보존
+            return card;
         }).join('') + `</div>`;
     });
     wrap.innerHTML = html;
