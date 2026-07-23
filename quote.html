@@ -324,6 +324,8 @@ let CATALOG = [{"cat":"소모품","sub":"침/도침","mode":"담기","qtyMode":"
 
 // ── 혜택 계산 ──
 const TIERS = [[6000000,.06],[5000000,.05],[4000000,.04],[3000000,.03],[0,0]];
+// 구간별 색상 — 올라갈수록 진해지고 6%(맥스)는 금색
+const TIER_COLOR = {3:'#3b82f6',4:'#6366f1',5:'#8b5cf6',6:'#f59e0b'};
 const DEPOSIT = 0.04;
 const rateOf = t => (TIERS.find(x=>t>=x[0])||[0,0])[1];
 const won = n => (Math.round(n)).toLocaleString('ko-KR')+'원';
@@ -375,15 +377,17 @@ function renderSurveyChips(){
     catList.appendChild(el);
   });
 }
-// 초기화: 시트에서 최신 카탈로그 받아 교체 후 칩 렌더(실패 시 구운 폴백 사용)
+// 카테고리 칩은 구운 폴백으로 즉시 렌더(딜레이 제거) → 시트 응답 오면 조용히 갱신
+renderSurveyChips();
 (async function init(){
   const fetched=await loadCatalogFromSheet();
   if(fetched && fetched.length){
     CATALOG = fetched.map(mapSheetRow).filter(x=>x.price>0 && (x.mode==='추천' || x.optId));
     const present=new Set(CATALOG.map(x=>x.cat));
+    const before=(META.cats||[]).map(c=>c.key).join(',');
     META.cats=(META.catMetaAll||META.cats).filter(c=>present.has(c.key));
+    if(before!==META.cats.map(c=>c.key).join(',')) renderSurveyChips();   // 카테고리 구성 바뀐 경우만 다시 그림
   }
-  renderSurveyChips();
 })();
 function step(id,d){
   const el=document.getElementById(id);
@@ -504,8 +508,10 @@ function renderCouponTiers(){
   const el=document.getElementById('ctiers');
   if(el.children.length) return;   // 1회만 생성
   TIERS.filter(t=>t[0]>0).slice().reverse().forEach(([min,rate])=>{
-    const c=document.createElement('div'); c.className='ctier'; c.dataset.min=min;
-    c.innerHTML=`<div class="amt">${(min/10000).toLocaleString()}만↑</div><div class="pct">${Math.round(rate*100)}%</div>`;
+    const pct=Math.round(rate*100), col=TIER_COLOR[pct]||'#3b82f6';
+    const c=document.createElement('div'); c.className='ctier'; c.dataset.min=min; c.dataset.color=col;
+    c.style.borderColor=col+'55';
+    c.innerHTML=`<div class="amt">${(min/10000).toLocaleString()}만↑</div><div class="pct" style="color:${col}">${pct}%</div>`;
     el.appendChild(c);
   });
 }
@@ -652,17 +658,24 @@ function recalc(){
     const need=next[0]-sale;
     const prev=TIERS.filter(t=>t[0]<=sale).sort((a,b)=>b[0]-a[0])[0][0];
     const pct=Math.max(6,Math.min(100,Math.round((sale-prev)/(next[0]-prev)*100)));
-    bar.style.width=pct+'%'; nEl.classList.remove('done');
-    txt.innerHTML=`현재 ${won(sale)} · <b>${won(need)}</b> 더 담으면 ${Math.round(next[1]*100)}% 할인!`;
+    const nextCol=TIER_COLOR[Math.round(next[1]*100)]||'#3b82f6';
+    bar.style.width=pct+'%'; bar.style.background=`linear-gradient(90deg,${nextCol}99,${nextCol})`; nEl.classList.remove('done');
+    txt.innerHTML=`현재 ${won(sale)} · <b style="color:${nextCol}">${won(need)}</b> 더 담으면 <b style="color:${nextCol}">${Math.round(next[1]*100)}% 할인</b>!`;
   } else {
-    bar.style.width='100%'; nEl.classList.add('done');
-    txt.innerHTML=`🎉 최대 할인 ${Math.round(rate*100)}% 적용 중입니다!`;
+    bar.style.width='100%'; bar.style.background=`linear-gradient(90deg,${TIER_COLOR[6]}99,${TIER_COLOR[6]})`; nEl.classList.add('done');
+    txt.innerHTML=`🎉 최대 할인 <b style="color:${TIER_COLOR[6]}">${Math.round(rate*100)}%</b> 적용 중입니다!`;
   }
 
-  // 쿠폰 구간표: 현재 적용 구간 강조
+  // 쿠폰 구간표: 구간별 색상 + 현재 구간 강조
   renderCouponTiers();
   const activeMin=(TIERS.find(t=>sale>=t[0])||[0])[0];
-  document.querySelectorAll('#ctiers .ctier').forEach(c=>c.classList.toggle('active',Number(c.dataset.min)===activeMin));
+  document.querySelectorAll('#ctiers .ctier').forEach(c=>{
+    const col=c.dataset.color, on=Number(c.dataset.min)===activeMin;
+    c.classList.toggle('active',on);
+    const pctEl=c.querySelector('.pct'), amtEl=c.querySelector('.amt');
+    if(on){ c.style.background=col; c.style.borderColor=col; c.style.boxShadow=`0 3px 10px ${col}55`; pctEl.style.color='#fff'; amtEl.style.color='#fff'; }
+    else { c.style.background='#fff'; c.style.borderColor=col+'55'; c.style.boxShadow='none'; pctEl.style.color=col; amtEl.style.color='var(--muted)'; }
+  });
 
   // 하단바: 총 X → 할인 Y → 최종 Z
   document.getElementById('foot-break').innerHTML = totalDisc>0
