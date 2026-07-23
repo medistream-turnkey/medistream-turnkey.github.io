@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>개원 준비 셀프 견적</title>
+<style>
+  :root{
+    --bg:#f3f5f8; --card:#fff; --line:#e6e9ef; --ink:#1e2733; --muted:#6b7684;
+    /* 메디스트림 블루 (너무 진하지 않게) — 변수명은 --green 유지하되 값만 파랑 */
+    --green:#3b82f6; --green-dark:#2563eb; --green-soft:#eef4fe; --green-line:#c7ddfb;
+    --accent:#2563eb; --gold:#b7791f; --strike:#9aa6b2;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 130px;}
+  #quote.wide-active{}
+
+  /* ── 레이아웃(사이드바 + 본문) ── */
+  .layout{display:block;}
+  .sidebar{display:none;}
+  .sb-title{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.03em;padding:2px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .sb-cat{padding:9px 11px;border-radius:9px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:7px;}
+  .sb-cat .sbc{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);background:#eef1f0;border-radius:99px;padding:1px 7px;min-width:18px;text-align:center;}
+  .sb-cat.active{background:var(--green-soft);color:var(--green-dark);}
+  .sb-cat.active .sbc{background:var(--green);color:#fff;}
+  .sb-cat.reco.active{background:#fdf6e6;color:var(--gold);}
+  .sb-cat.reco.active .sbc{background:var(--gold);}
+  .sb-sub{display:block;padding:6px 11px 6px 28px;font-size:13px;color:var(--muted);cursor:pointer;border-radius:8px;text-decoration:none;}
+  .sb-sub:hover{color:var(--accent);background:#f4f7f6;}
+  .sb-sub::after{content:" ↗";font-size:11px;color:#b9c2be;}
+  @media(min-width:760px){
+    .wrap{max-width:940px;}
+    .survey{max-width:600px;margin:0 auto;}
+    .layout{display:flex;gap:22px;align-items:flex-start;}
+    .sidebar{display:block;width:196px;flex:none;position:sticky;top:58px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 8px;}
+    #sections{flex:1;min-width:0;}
+  }
+  header .hi{font-size:13px;color:var(--muted);}
+  header h1{font-size:24px;margin:2px 0 2px;}
+  header .valid{font-size:12px;color:var(--muted);margin-bottom:18px;}
+
+  /* ── 설문 화면 ── */
+  .survey{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:0 6px 22px rgba(18,122,82,.06);}
+  .survey h2{font-size:19px;margin:0 0 4px;}
+  .survey .desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+  .field{margin-bottom:18px;}
+  .field > label{display:block;font-size:13.5px;font-weight:700;margin-bottom:8px;}
+  .field .hint{font-weight:500;color:var(--muted);font-size:12px;margin-left:6px;}
+  .field input[type=text],.field input[type=date]{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink);}
+  .field input:focus{outline:none;border-color:var(--green);}
+  .beds{display:flex;gap:12px;}
+  .beds .bcol{flex:1;}
+  .beds .bcol span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .stepper button{width:44px;height:46px;border:none;background:#f4f7f6;font-size:20px;color:var(--green-dark);cursor:pointer;}
+  .stepper button:active{background:var(--green-soft);}
+  .stepper input{flex:1;width:100%;text-align:center;border:none;font-size:16px;font-weight:700;font-family:inherit;background:#fff;color:var(--ink);}
+  .cats{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .catchip{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:11px;padding:12px 13px;cursor:pointer;user-select:none;font-size:14px;font-weight:600;background:#fff;}
+  .catchip input{width:17px;height:17px;cursor:pointer;accent-color:var(--green);}
+  .catchip.on{border-color:var(--green-line);background:var(--green-soft);}
+  .catchip .tag{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--muted);background:#f0f3f2;border-radius:6px;padding:2px 6px;}
+  .catchip .tag.reco{color:var(--gold);background:#fdf6e6;}
+  .gobtn{width:100%;margin-top:6px;background:var(--green);color:#fff;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;}
+  .gobtn:hover{background:var(--green-dark);}
+
+  /* ── 혜택 히어로 ── */
+  .hero{background:linear-gradient(160deg,#ffffff,#f2f7ff);border:1px solid var(--green-line);border-radius:18px;padding:22px 22px 20px;box-shadow:0 6px 22px rgba(18,122,82,.08);margin-bottom:16px;}
+  .hero .cap{font-size:12px;font-weight:700;color:var(--green);letter-spacing:.02em;margin-bottom:14px;}
+  .ladder{display:flex;flex-direction:column;gap:9px;}
+  .lrow{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;}
+  .lrow .lbl{color:var(--muted);}
+  .lrow .val{font-variant-numeric:tabular-nums;}
+  .lrow.list .val{color:var(--strike);text-decoration:line-through;}
+  .lrow .save{color:var(--green);font-size:12px;font-weight:700;margin-left:8px;}
+  .lrow.coupon .val{color:var(--green);font-weight:700;}
+  .lrow.coupon .val.hint{color:var(--muted);font-weight:500;font-size:12.5px;}
+  .final{display:flex;justify-content:space-between;align-items:baseline;}
+  .final .lbl{font-size:15px;font-weight:700;}
+  .final .val{font-size:26px;font-weight:800;color:var(--green-dark);font-variant-numeric:tabular-nums;}
+  .deposit{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:9px 12px;background:var(--green-soft);border-radius:10px;font-size:13px;}
+  .deposit .lbl{color:var(--green-dark);font-weight:600;}
+  .deposit .val{font-weight:800;color:var(--green-dark);font-variant-numeric:tabular-nums;}
+  .savechip{margin-top:14px;text-align:center;background:var(--green);color:#fff;font-weight:700;font-size:15px;padding:11px;border-radius:12px;}
+
+  /* ── 넛지 ── */
+  .nudge{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:18px;}
+  .nudge .txt{font-size:13px;font-weight:600;margin-bottom:8px;}
+  .nudge .txt b{color:var(--gold);}
+  .bar{height:9px;background:#eef1f0;border-radius:99px;overflow:hidden;}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#f0b429,#b7791f);border-radius:99px;transition:width .3s;}
+  .nudge.done .bar > i{background:linear-gradient(90deg,#60a5fa,#2563eb);}
+
+  /* ── 쿠폰 구간표 ── */
+  .ctiers-wrap{margin-bottom:18px;}
+  .ctiers-cap{font-size:11.5px;font-weight:700;color:var(--green);margin:0 2px 7px;}
+  .ctiers{display:flex;gap:6px;}
+  .ctier{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 4px;background:#fff;}
+  .ctier .amt{color:var(--muted);font-size:11px;}
+  .ctier .pct{font-weight:800;font-size:15px;color:var(--ink);margin-top:1px;}
+  .ctier.active{border-color:var(--green);background:var(--green-soft);box-shadow:0 2px 8px rgba(18,122,82,.12);}
+  .ctier.active .pct{color:var(--green-dark);}
+  .ctier.active .amt{color:var(--green);font-weight:700;}
+
+  /* ── 섹션 헤더 ── */
+  .editbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .editbar .back{font-size:13px;color:var(--accent);background:none;border:none;cursor:pointer;padding:4px 0;}
+  .editbar .cond{font-size:12.5px;color:var(--muted);}
+  .cattitle{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:800;margin:22px 2px 10px;}
+  .cattitle .badge{font-size:10.5px;font-weight:700;color:var(--gold);background:#fdf6e6;border-radius:6px;padding:2px 7px;}
+  .cattitle .badge.cart{color:var(--green);background:var(--green-soft);}
+  .reco-note{font-size:12px;color:var(--muted);margin:0 2px 12px;}
+
+  /* ── 카테고리 탭 (상단 고정) ── */
+  .tabbar{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding:6px 0 6px;-webkit-overflow-scrolling:touch;position:sticky;top:0;z-index:6;background:var(--bg);}
+  .tabbar::-webkit-scrollbar{height:0;}
+  .tab{flex:none;display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap;font-family:inherit;}
+  .tab.active{border-color:var(--green);background:var(--green-soft);color:var(--green-dark);}
+  .tab .cnt{font-size:11px;font-weight:700;background:#eef1f0;color:var(--muted);border-radius:99px;padding:1px 7px;min-width:18px;text-align:center;}
+  .tab.active .cnt{background:var(--green);color:#fff;}
+  .tab.reco .cnt{background:#d8c48a;}
+  .tab.reco.active{border-color:var(--gold);background:#fdf6e6;color:var(--gold);}
+  .tab.reco.active .cnt{background:var(--gold);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ── 그룹/품목 ── */
+  .group{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;}
+  .ghead{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;position:sticky;top:50px;z-index:4;background:var(--card);border-radius:14px 14px 0 0;border-bottom:1px solid var(--line);}
+  .group.collapsed .ghead{border-radius:14px;border-bottom:none;}
+  .ghead .arrow{transition:transform .2s;color:var(--muted);font-size:12px;}
+  .group.collapsed .arrow{transform:rotate(-90deg);}
+  .ghead .gname{font-weight:700;font-size:15px;}
+  .ghead .gcount{color:var(--muted);font-size:13px;font-weight:500;}
+  .ghead .mkt{margin-left:auto;font-size:12px;font-weight:600;color:var(--accent);background:#f0f6ff;border:1px solid #d3e4fb;border-radius:8px;padding:4px 9px;text-decoration:none;white-space:nowrap;}
+  .ghead .mkt:hover{background:#e3eefe;}
+  .ghead .gall{margin-left:auto;font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;}
+  .ghead .mkt ~ .gall{margin-left:10px;}
+  .gbody{border-radius:0 0 14px 14px;overflow:hidden;}
+  .group.collapsed .gbody{display:none;}
+  .group.linkonly .ghead{cursor:default;border-radius:14px;border-bottom:none;}
+  .group.linkonly .gname{color:var(--muted);}
+  .linkbody{padding:12px 16px 14px;}
+  .mkt-card{display:inline-block;color:var(--accent);font-weight:600;font-size:13px;text-decoration:none;background:#f0f6ff;border:1px solid #d3e4fb;border-radius:9px;padding:8px 13px;}
+  .mkt-card:hover{background:#e3eefe;}
+  .mkt-soon{color:var(--muted);font-size:12.5px;}
+  .item{display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-top:1px solid var(--line);}
+  .item input[type=checkbox]{width:18px;height:18px;margin-top:2px;cursor:pointer;flex:none;accent-color:var(--green);}
+  .item .info{flex:1;min-width:0;}
+  .item .nm{font-weight:600;font-size:14px;}
+  .item .pr{color:var(--muted);font-size:12.5px;margin-top:1px;}
+  .item .pr a{color:var(--accent);text-decoration:none;}
+  .item .unitpr{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .item .amt{text-align:right;flex:none;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+  .item .amt .q{font-size:12px;color:var(--muted);}
+  .item .amt .p{font-weight:700;font-size:14px;}
+  .qstep{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .qstep button{width:26px;height:26px;border:none;background:#f4f7f6;font-size:15px;color:var(--green-dark);cursor:pointer;line-height:1;font-family:inherit;padding:0;}
+  .qstep button:active{background:var(--green-soft);}
+  .qstep .qv{min-width:32px;text-align:center;font-weight:700;font-size:13px;}
+  .item.off .qstep{opacity:.5;pointer-events:none;}
+  .item.off{opacity:.4;}
+  .item.off .nm{text-decoration:line-through;}
+  .item.reco{gap:0;}
+  .item.reco .rank{flex:none;width:22px;font-weight:800;color:var(--green);font-size:14px;margin-top:1px;}
+
+  /* ── 고정 하단바 ── */
+  .footbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(0,0,0,.06);display:none;}
+  .footbar.show{display:block;}
+  .footbar .inner{max-width:760px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;}
+  .footbar .sum{flex:1;min-width:0;}
+  .footbar .sum .fb-break{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .footbar .sum .fb-break b{color:var(--ink);font-weight:700;}
+  .footbar .sum .fb-break .disc{color:var(--green-dark);font-weight:700;}
+  .footbar .sum .m{font-size:20px;font-weight:800;color:var(--green-dark);font-variant-numeric:tabular-nums;}
+  .footbar button{background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .footbar button:hover{background:var(--green-dark);}
+  .footbar button:disabled{background:#c3ccc9;}
+
+  /* ── 전송 모달 ── */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20;}
+  .modal.show{display:flex;}
+  .modal .box{background:#fff;border-radius:16px;max-width:400px;width:100%;padding:28px 24px;text-align:center;}
+  .modal .check{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;background:var(--green-soft);color:var(--green);font-size:30px;font-weight:800;line-height:56px;}
+  .modal h3{margin:0 0 8px;}
+  .modal p{color:var(--muted);font-size:13.5px;line-height:1.6;margin:0 0 8px;}
+  .modal p b{color:var(--ink);}
+  .modal .x{margin-top:18px;}
+  .modal .x button{background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-weight:700;cursor:pointer;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="hi">메디마켓 개원 준비</div>
+    <h1 id="pageTitle">개원 준비 셀프 견적</h1>
+    <div class="valid" id="pageValid">몇 가지만 입력하시면 예상 견적을 바로 확인하실 수 있습니다.</div>
+  </header>
+
+  <!-- ── 화면 1: 설문 ── -->
+  <section class="survey" id="survey">
+    <h2>견적 조건 입력</h2>
+    <div class="desc">진료실 규모에 맞춰 한의원 표준 비치량으로 수량을 자동 계산해 드립니다. 필요한 카테고리만 선택하세요.</div>
+
+    <div class="field">
+      <label>원장님 성함</label>
+      <input type="text" id="f-name" placeholder="예: 홍길동" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>개원 예정일 <span class="hint">선택</span></label>
+      <input type="date" id="f-date">
+    </div>
+
+    <div class="field">
+      <label>진료실(베드) 구성 <span class="hint">소모품 수량 자동계산에 사용</span></label>
+      <div class="beds">
+        <div class="bcol"><span>1인실 (1베드)</span>
+          <div class="stepper"><button type="button" onclick="step('r1',-1)">−</button><input type="text" id="r1" value="2" inputmode="numeric" readonly><button type="button" onclick="step('r1',1)">+</button></div>
+        </div>
+        <div class="bcol"><span>2인실 (2베드)</span>
+          <div class="stepper"><button type="button" onclick="step('r2',-1)">−</button><input type="text" id="r2" value="1" inputmode="numeric" readonly><button type="button" onclick="step('r2',1)">+</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>필요한 카테고리 <span class="hint">기본 전체 선택</span></label>
+      <div class="cats" id="catList"></div>
+    </div>
+
+    <button class="gobtn" id="goBtn" onclick="buildQuote()">견적 확인하기 →</button>
+  </section>
+
+  <!-- ── 화면 2: 견적 ── -->
+  <div id="quote" class="hidden">
+    <div class="editbar">
+      <button class="back" onclick="backToSurvey()">← 조건 수정</button>
+      <span class="cond" id="condLine"></span>
+    </div>
+
+    <section class="hero" id="hero">
+      <div class="cap">💚 원장님께 이만큼 혜택 드립니다</div>
+      <div class="ladder">
+        <div class="lrow"><span class="lbl">총 합계</span><span class="val" id="v-total">-</span></div>
+        <div class="final"><span class="lbl">턴키 추가할인 <span class="save" id="v-coupon-pct">0%</span></span><span class="val" id="v-after">-</span></div>
+        <div class="deposit"><span class="lbl">💳 예치금 결제 시 최대 4% 추가 혜택</span><span class="val" id="v-deposit">-</span></div>
+      </div>
+      <div class="savechip" id="v-chip">-</div>
+    </section>
+
+    <div class="nudge" id="nudge">
+      <div class="txt" id="nudge-txt">-</div>
+      <div class="bar"><i id="nudge-bar" style="width:0%"></i></div>
+    </div>
+
+    <div class="ctiers-wrap">
+      <div class="ctiers-cap">💳 개원 쿠폰 구간 (많이 담을수록 할인율 ↑)</div>
+      <div class="ctiers" id="ctiers"></div>
+    </div>
+
+    <div id="tabbarHost"></div>
+
+    <div class="layout">
+      <nav class="sidebar" id="sidebar"></nav>
+      <div id="sections"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footbar" id="footbar">
+  <div class="inner">
+    <div class="sum">
+      <div class="fb-break" id="foot-break">-</div>
+      <div class="m" id="foot-amt">-</div>
+    </div>
+    <button onclick="submitOrder()">이 금액으로 주문 요청 →</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <div class="check">✓</div>
+    <h3>주문 요청이 접수되었습니다</h3>
+    <p id="modal-sub">선택하신 <b id="modal-count">-</b> · 예상 혜택가 <b id="modal-amt">-</b><br>담당 매니저가 확인 후 연락드리겠습니다 🙏</p>
+    <div class="x"><button onclick="closeModal()">확인</button></div>
+  </div>
+</div>
+
+<script>
+const META = {"gasUrl":"https://script.google.com/macros/s/AKfycbz2SHFWBN19fZe5nNBhry5OqY1nfcVo_MkwySBXUILOoguiw4AoH1Yr6TxsBSK5lCE/exec","cats":[{"key":"소모품","mode":"담기","qtyMode":"bed","icon":"🧰"},{"key":"원내탕전","mode":"담기","qtyMode":"fixed","icon":"🌿"}],"subcats":{"소모품":[{"name":"침/도침","url":"https://market.medistream.co.kr/categories/63087825a855ef615d5660fb?sort=three_months:desc&view=normal"},{"name":"뜸/부항/사혈","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df36?sort=three_months:desc&view=normal"},{"name":"의약외품/소독제","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df37?sort=three_months:desc&view=normal"},{"name":"주사기","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df38?sort=three_months:desc&view=normal"},{"name":"페이퍼/마스크/글러브","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df39?sort=three_months:desc&view=normal"},{"name":"테이핑/밴드류","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df3a?sort=three_months:desc&view=normal"},{"name":"기타 소모품","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df3b?sort=three_months:desc&view=normal"}],"원내탕전":[{"name":"한약재","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df20?sort=three_months:desc&view=normal"},{"name":"탕전장비","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df57?sort=three_months:desc&view=normal"},{"name":"파우치/박스/가방","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df58?sort=three_months:desc&view=normal"},{"name":"탕전소모품","url":"https://market.medistream.co.kr/categories/62c3c8369e6a2a8f75a5df5a?sort=three_months:desc&view=normal"},{"name":"탕전용 원료약품/제품","url":"https://market.medistream.co.kr/categories/62e34d36647d4b4fd0e0b74e?sort=three_months:desc&view=normal"}]}};
+const CATALOG = [{"cat":"소모품","sub":"침/도침","mode":"담기","qtyMode":"bed","nm":"침","prod":"다나침 한쌈용 1,000쌈 (0.20x30mm)","price":173000,"list":187000,"P":"추천수량","Q":5,"url":"https://medistream.co.kr/products/5fe3ffe7fccb62001a21e836","optId":"5fe40021329d0c001aca72e7","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"침/도침","mode":"담기","qtyMode":"bed","nm":"침","prod":"다나침 두쌈용 1,000쌈 (0.25x40mm)","price":173000,"list":187000,"P":"추천수량","Q":5,"url":"https://medistream.co.kr/products/5fe3ffec329d0c001aca7296","optId":"5fe4005afccb62001a21e8b4","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"침/도침","mode":"담기","qtyMode":"bed","nm":"도침","prod":"우전 도침 1팩(100pcs) (0.40×30mm)","price":52500,"list":64900,"P":"베드비례","Q":0.8,"url":"https://medistream.co.kr/products/657c02551bb6b1001bc8e566","optId":"657c02951bb6b1001bc8e57f","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"부항","prod":"[신규런칭] 한솔 일회용 부항컵 1,000개 (P0001013) (3호 (내경 39mm))","price":143000,"list":165000,"P":"추천수량","Q":5,"url":"https://medistream.co.kr/products/698576edc0b725f6328d9eac","optId":"698576eea85415026ede5e5d","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"란셋","prod":"세이프란 전용 란셋 30G 니들 1박스(1box*100pcs)[유통기한: 29년1월] (세이프란 전용 란셋 30G 니들 1박스[유통기한: 29년1월])","price":8900,"list":12000,"P":"베드비례","Q":1,"url":"https://medistream.co.kr/products/5fb3bf2451203163343241df","optId":"67a98c85ed355d0953baa606","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"온뜸세트","prod":"온뜸 세트(스티커 1500매 포함) (온뜸 세트)","price":1129000,"list":1150000,"P":"추천수량","Q":1,"url":"https://medistream.co.kr/products/5e8fc6dfbfe426094478512c","optId":"67247e6b5eae559fe29d5792","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"채혈밴드","prod":"모아랩밴드 채혈밴드 20mm 100매 1케이스 (살색 MOALAB BAND 100매 1케이스)","price":3300,"list":3300,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/68896c3edc122b4ee7d469dd","optId":"68896c3fa438b66cf147a3c8","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"실뜸","prod":"[실뜸나라] 실뜸 1호 (건보용)","price":4600,"list":4600,"P":"룸비례","Q":1,"url":"https://medistream.co.kr/products/683d43f6686effb0ff4d925d","optId":"683d43f7b6f1f4c937577cbc","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"부항펌프","prod":"대건 수동부항펌프 권총형 (대건 수동부항펌프 권총형)","price":7700,"list":9700,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/60af4a2d0ccc56001bc7ef81","optId":"60e4797aae811e631eda91f8","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"뜸/부항/사혈","mode":"담기","qtyMode":"bed","nm":"사혈기","prod":"세이프란 충전식 무선 자동 사혈기 (세이프란 충전식 무선 자동 사혈기 1 SET(사혈기 1 + 충전기 1))","price":178000,"list":220000,"P":"추천수량","Q":2,"url":"https://medistream.co.kr/products/5fb3bf2251203163343241dd","optId":"68d2087c89d1fa1481d0a03e","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"의약외품/소독제","mode":"담기","qtyMode":"bed","nm":"소독용에탄올","prod":"★소모품 DAY★ 그린 소독용에탄올 83% 4L 1개 (★소모품 DAY★ 그린 소독용에탄올 83% 4L 1개)","price":11400,"list":11500,"P":"베드비례","Q":2,"url":"https://medistream.co.kr/products/60b5f60ec1908b001a64a1d9","optId":"60e4797aae811e631eda9258","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"의약외품/소독제","mode":"담기","qtyMode":"bed","nm":"그린덱스","prod":"★소모품 DAY★ 그린제약 그린 덱스 4L 1개 (★소모품 DAY★ 그린제약 그린 덱스 4L 1개)","price":11780,"list":13000,"P":"베드비례","Q":1.3,"url":"https://medistream.co.kr/products/63e8ac00875765002226a745","optId":"63e8ac21d3904f0012dd71d6","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"의약외품/소독제","mode":"담기","qtyMode":"bed","nm":"포비돈스왑","prod":"그린제약 포비돈스틱스왑 2P*50입 1박스 (그린제약 포비돈스틱스왑 2P*50입 1박스)","price":12000,"list":12000,"P":"베드비례","Q":0.6,"url":"https://medistream.co.kr/products/6502c7688948cd006b544bc6","optId":"6502c7908948cd006b544bd6","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"의약외품/소독제","mode":"담기","qtyMode":"bed","nm":"파스","prod":"[메디스트림 스탠다드] 한방장수고 카타플라스마 파스 일체형 50포(300매) 1박스 (한방장수고 카타플라스마 파스 일체형 50포(300매) 1박스)","price":109000,"list":115000,"P":"룸비례","Q":0.15,"url":"https://medistream.co.kr/products/670763ec901834ba96022cce","optId":"670763ed5f8dfeb46eccdb98","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"의약외품/소독제","mode":"담기","qtyMode":"bed","nm":"멍크림","prod":"케이옥시덤 오피크림 (멍크림) 30mL (30mL)","price":20900,"list":39000,"P":"추천수량","Q":1,"url":"https://medistream.co.kr/products/62cb8705b99f01002300b955","optId":"62cb871eb99f01002300b96d","basis":"한의원 표준 비치"},{"cat":"소모품","sub":"주사기","mode":"담기","qtyMode":"bed","nm":"주사기","prod":"성심 일회용 주사기 100pcs (1cc｜26G｜13mm(1/2\") 100pcs)","price":8700,"list":12000,"P":"베드비례","Q":2.5,"url":"https://medistream.co.kr/products/633fcb066c1d36001a838183","optId":"68cb91a998e6df9705fcef7b","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"주사기","mode":"담기","qtyMode":"bed","nm":"주사침","prod":"성심 일회용 주사침 (기본사이즈) 100pcs (30G | 4mm (0.15\") 100pcs)","price":10700,"list":6000,"P":"베드비례","Q":2.8,"url":"https://medistream.co.kr/products/5fca15d40204ef001a67eeaa","optId":"605867380ccc56001bc79580","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"주사기","mode":"담기","qtyMode":"bed","nm":"인슐린주사기","prod":"성심 인슐린주사기 1ml 100pcs (31G | 8mm (100pcs))","price":10100,"list":11000,"P":"베드비례","Q":2,"url":"https://medistream.co.kr/products/5fca15ce0204ef001a67eea7","optId":"69d9aad85947458f0c8ae73d","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"글러브","prod":"메디컴 세이프터치 울트라그립 라텍스 글러브 100개입 1박스 (M)","price":9000,"list":9000,"P":"베드비례","Q":2,"url":"https://medistream.co.kr/products/62df4d85119967002389bdb6","optId":"6502b4e78948cd006b5449c6","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"베개커버","prod":"[25년 판매 1위] 일회용 위생 베개 커버 420x420mm 400매 5묶음(2,000매) (일회용 위생 베개 커버 420x420mm 400매)","price":9200,"list":44500,"P":"베드비례","Q":0.475,"url":"https://medistream.co.kr/products/642279c3f57100001b9fbe1f","optId":"64227aa279d54400113aeab0","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"덴탈마스크","prod":"유한킴벌리 덴탈마스크 50매 (유한킴벌리 덴탈마스크 50매*1박스)","price":9100,"list":7000,"P":"베드비례","Q":0.6,"url":"https://medistream.co.kr/products/62625488c1ca560032c7a803","optId":"626254a8c1ca560032c7a826","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"거즈","prod":"수성메디칼 거즈엔 200매 1박스 (10cmx10cmx4p(200매))","price":5300,"list":8500,"P":"베드비례","Q":2.6,"url":"https://medistream.co.kr/products/62834f6a9d93880024064b1c","optId":"62c69243b99f01002300ab32","basis":"7베드 2개월 기준"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"추나용지","prod":"카이로 롤페이퍼 추나용지 (210mm x 70m) 10롤 (카이로 롤페이퍼 추나용지 (210mm x 70m) 10롤)","price":39900,"list":65000,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/67455d5eb7f1deb74e84be2f","optId":"67455d5fb7f1deb74e84be36","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"ICT멸균패드","prod":"ICT 스펀지(4개 1세트) (ICT 스펀지(4개 1세트))","price":4000,"list":4000,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/61af0874fdda720023bcd4d0","optId":"61af0897fdda720023bcd500","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"페이퍼/마스크/글러브","mode":"담기","qtyMode":"bed","nm":"탈지면","prod":"수성메디칼 탈지면 롤-에스(볼형) 450g 1팩 (수성메디칼 탈지면 롤-에스(볼형) 450g 1팩 [5호])","price":5500,"list":5500,"P":"룸비례","Q":1,"url":"https://medistream.co.kr/products/60e40b8cd26af90681b1ae9e","optId":"62830bf69d93880024064932","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"건식핫팩","prod":"[인텍스] 현미 건식 핫팩 (대) (현미 건식 핫팩 (대))","price":20500,"list":23700,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/62ce959b3fc97a002bec8c01","optId":"62cfcdda53948a0022897e8f","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"농반(곡반)","prod":"농반(小) 200, 가로 20 * 세로 9.5 * 높이 3(cm) (농반(小) 200)","price":9600,"list":12000,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/62a064bf9d93880024074e0f","optId":"62a065199d93880024074ea7","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"개무밧드","prod":"천양사 개무밧드 8절 (소)(CY1180) (천양사 개무밧드 8절 (소)(CY1180))","price":11300,"list":11300,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/601d07012c593a001ace9b83","optId":"60e47971ae811e631eda8bad","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"주사기밧드","prod":"천양사 주사기밧드(CY1016) (천양사 주사기밧드(CY1016))","price":17700,"list":17700,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/601d06fe2c593a001ace9b81","optId":"60e47971ae811e631eda8b9b","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"솜통","prod":"천양사 솜통 (스폰지 캔) 1호(CY3010) (천양사 솜통 (스폰지 캔) 1호(CY3010))","price":5400,"list":5400,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/601d0705527223001a208167","optId":"60e47971ae811e631eda8bc8","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"외과가위","prod":"의료용 외과 가위 BS타입 (의료용 외과 가위 BS타입)","price":3000,"list":3000,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/6486d11275053f0044dfdb0b","optId":"6486d1b975053f0044dfdb2f","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"드레싱카","prod":"대경 드레싱카 101B (대경 드레싱카 101B)","price":71500,"list":71500,"P":"룸비례","Q":0.5,"url":"https://medistream.co.kr/products/6090ae010ccc56001bc7cff3","optId":"60e47976ae811e631eda8f9a","basis":"진료실 5실 공용"},{"cat":"소모품","sub":"기타 소모품","mode":"담기","qtyMode":"bed","nm":"타임콜타이머","prod":"도도텍 타임콜 본체 1개+타이머 10개 세트 FMD-8000 (도도텍 타임콜 본체 1개+타이머 10개 세트 FMD-8000)","price":899000,"list":925000,"P":"추천수량","Q":1,"url":"https://medistream.co.kr/products/5ed60adee510ee503167c60d","optId":"60e47965ae811e631eda81a5","basis":"한의원 표준 비치"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"녹용(분골)","prod":"온누리바이오생약 특A골드 뉴질랜드 분골 75g*8 (진공포장)","price":399000,"list":399000,"qty":1,"url":"https://market.medistream.co.kr/products/67a0229ebf053d1f7c2b1394","optId":"67a026ed8c2fdf560f7bf52f","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"녹용(상대)","prod":"온누리바이오생약 특A골드 뉴질랜드 상대 75g*8 (진공포장)","price":265000,"list":265000,"qty":1,"url":"https://market.medistream.co.kr/products/67a025defce5b08a09012bd9","optId":"67a0262b2a71b0a0fb2c34ad","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"갈근","prod":"[메디스트림 스탠다드] 갈근(각), 500g, 중국","price":3000,"list":3000,"qty":1,"url":"https://market.medistream.co.kr/products/642c2053f57100001b9ff958","optId":"642c2077d244ba0011fc646a","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"감초","prod":"[메디스트림 스탠다드] 감초, 500g ,우즈베키스탄","price":4900,"list":4900,"qty":2,"url":"https://market.medistream.co.kr/products/64d3517e229ecf00378054c3","optId":"64d351b2229ecf00378054d5","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"건강","prod":"[메디스트림 스탠다드] 건강, 500g, 베트남","price":5000,"list":5000,"qty":1,"url":"https://market.medistream.co.kr/products/66ded552298a4831a9387b95","optId":"66ded553298a4831a9387b9d","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"계지","prod":"[메디스트림 스탠다드] 계지(세계지), 500g, 베트남","price":2000,"list":2000,"qty":1,"url":"https://market.medistream.co.kr/products/642c1da6f57100001b9ff94f","optId":"642c1e07d244ba0011fc6468","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"구기자","prod":"[메디스트림 스탠다드] 구기자(영하,대), 500g, 중국","price":8100,"list":8100,"qty":1,"url":"https://market.medistream.co.kr/products/642c1c40f57100001b9ff945","optId":"642c1c6c4bed1a00122666d5","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"길경","prod":"[메디스트림 스탠다드] 길경(편절), 중국, 500g","price":3900,"list":3900,"qty":1,"url":"https://market.medistream.co.kr/products/685e2b2f22097bb38dfa2c49","optId":"685e2b30ad015577770fd9b7","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"당귀","prod":"[수 壽] 참당귀(특), 500g, 한국","price":14900,"list":14900,"qty":2,"url":"https://market.medistream.co.kr/products/67f3a2181683f4ede58b9034","optId":"67f3a219c35c1ae64162aea2","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"대추","prod":"[선일생약] 대추(절편), 500g, 한국","price":8700,"list":8700,"qty":2,"url":"https://market.medistream.co.kr/products/670cafa7901834ba96028fac","optId":"6941f8883c060472a7ccb3ca","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"도인","prod":"[메디스트림 스탠다드] 도인(편절), 500g, 중국","price":5600,"list":5600,"qty":1,"url":"https://market.medistream.co.kr/products/69d4d8daea4a3e640dbe2999","optId":"69d4d8db5c9b03f4435d3b1c","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"독활","prod":"[선일생약] 독활, 500g, 한국","price":15600,"list":15600,"qty":1,"url":"https://market.medistream.co.kr/products/67171b7a7dd5d2de9786e8f8","optId":"67171b7a7dd5d2de9786e900","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"두충","prod":"[신흥제약] 두충염자, 500g, 중국","price":8500,"list":8500,"qty":1,"url":"https://market.medistream.co.kr/products/609a3719c1908b001a6418dd","optId":"60e47978ae811e631eda90e1","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"마황","prod":"[수 壽] 마황(고함량), 500g, 중국","price":4700,"list":4700,"qty":2,"url":"https://market.medistream.co.kr/products/692d1961bf8e525816d4b0ca","optId":"692d19624c83125ce180ca96","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"맥문동","prod":"[메디스트림 스탠다드] 맥문동, 500g, 중국","price":14500,"list":14500,"qty":1,"url":"https://market.medistream.co.kr/products/62a808cc08e04900234de688","optId":"62a808eb08e04900234de6ae","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"목단피","prod":"[메디스트림 스탠다드] 목단피, 500g, 중국","price":14600,"list":14600,"qty":1,"url":"https://market.medistream.co.kr/products/68d61020fe046b61012df1b1","optId":"68d610210389086ba1dd9cbf","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"반하","prod":"[메디스트림 스탠다드] 반하(절편), 500g, 중국","price":14200,"list":14200,"qty":1,"url":"https://market.medistream.co.kr/products/689d63da7338dd8552ea3a44","optId":"689d63db57312a9c4de66223","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"반하법제","prod":"[메디스트림 스탠다드] 반하생강백반제, 500g, 중국","price":17200,"list":17200,"qty":2,"url":"https://market.medistream.co.kr/products/667196cb0c0b96ab7120c98a","optId":"667196d20c0b96ab7120c992","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"방풍","prod":"[메디스트림 스탠다드] 방풍(기원), 500g, 중국","price":5900,"list":5900,"qty":1,"url":"https://market.medistream.co.kr/products/675c029c1a835265e2ba01fa","optId":"675c029c1a835265e2ba0201","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"백출","prod":"[메디스트림 스탠다드] 백출(동북), 500g, 중국","price":5900,"list":5900,"qty":2,"url":"https://market.medistream.co.kr/products/667198d60c0b96ab7120c9a7","optId":"667198dc0c0b96ab7120c9ae","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"복령","prod":"[수 壽] 복령(재배), 500g, 한국","price":19200,"list":19200,"qty":2,"url":"https://market.medistream.co.kr/products/67f3a2cb4a037d317cb814b3","optId":"67f3a2cb4a037d317cb814bb","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"산사","prod":"[메디스트림 스탠다드] 산사(육), 500g, 중국","price":3600,"list":3600,"qty":1,"url":"https://market.medistream.co.kr/products/67a957e59f952ed3140f6fd1","optId":"67a957e69f952ed3140f6fda","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"산약","prod":"[메디스트림 스탠다드] 산약(편), 500g, 중국","price":7300,"list":7300,"qty":1,"url":"https://market.medistream.co.kr/products/67d293463442748c79c3bfa9","optId":"67d2934786e3ce7ae91a24d5","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"생강","prod":"[안동농협] GMP생강, 500g, 한국","price":10000,"list":10000,"qty":2,"url":"https://market.medistream.co.kr/products/62b98c3c08e04900234e2aca","optId":"62b98c4608e04900234e2ad2","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"생지황","prod":"[농림생약] GMP생지황, 600g, 한국","price":13000,"list":13000,"qty":1,"url":"https://market.medistream.co.kr/products/62cfe5c753948a0022897f08","optId":"62cfe7e853948a0022897f15","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"석고","prod":"[메디스트림 스탠다드] 석고, 1kg, 중국","price":3000,"list":3000,"qty":1,"url":"https://market.medistream.co.kr/products/644f4b737ab16b0053a883ef","optId":"644f4b954bed1a00122668eb","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"숙지황","prod":"[메디스트림 스탠다드] 숙지황(완증), 500g, 중국","price":5900,"list":5900,"qty":2,"url":"https://market.medistream.co.kr/products/644f4ee27ab16b0053a88421","optId":"644f4f1bd244ba0011fc66b5","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"시호","prod":"[메디스트림 스탠다드] 시호 [에이] 500g, 중국","price":6200,"list":6200,"qty":1,"url":"https://market.medistream.co.kr/products/62a808d008e04900234de68c","optId":"62a808ed08e04900234de6b1","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"오미자","prod":"[메디스트림 스탠다드] 오미자, 500g, 중국","price":8200,"list":8200,"qty":1,"url":"https://market.medistream.co.kr/products/678dd0c7ac476e9122d62a11","optId":"678dd0c8ac476e9122d62a18","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"용안육","prod":"[메디스트림 스탠다드] 용안육(특), 600g, 태국","price":12100,"list":12100,"qty":1,"url":"https://market.medistream.co.kr/products/62a808d008e04900234de68d","optId":"62a808ed08e04900234de6b2","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"우슬","prod":"[메디스트림 스탠다드] 우슬(특), 500g, 중국","price":5000,"list":5000,"qty":1,"url":"https://market.medistream.co.kr/products/642c218bf57100001b9ff964","optId":"642c21a92e9b520011cabf30","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"육계","prod":"[메디스트림 스탠다드] 육계(거피), 500g, 베트남","price":5400,"list":5400,"qty":2,"url":"https://market.medistream.co.kr/products/62a808d108e04900234de68e","optId":"69119458fb6db44fe695a6ba","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"의이인","prod":"[선일생약] 의이인(거피), 600g, 한국","price":13800,"list":13800,"qty":2,"url":"https://market.medistream.co.kr/products/6941fc1e9b590cce176cc214","optId":"6941fc1f9b590cce176cc216","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"인삼","prod":"[수 壽] 인삼(4~5년근, 절편), 500g, 한국","price":73900,"list":73900,"qty":1,"url":"https://market.medistream.co.kr/products/67f3a0a30bd2bc3de9be6155","optId":"67f3a0a40bd2bc3de9be615a","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"일당귀","prod":"[메디스트림 스탠다드] 일당귀, 500g, 한국","price":15000,"list":15000,"qty":1,"url":"https://market.medistream.co.kr/products/670ddd22901834ba9602b185","optId":"670ddd23901834ba9602b18d","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"작약","prod":"[수 壽] 작약(GAP), 500g, 한국","price":7400,"list":7400,"qty":2,"url":"https://market.medistream.co.kr/products/69a678971908abf100f3893b","optId":"69a678981908abf100f38942","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"지실","prod":"[메디스트림 스탠다드] 지실, 500g, 중국","price":9300,"list":9300,"qty":1,"url":"https://market.medistream.co.kr/products/66b9f961f3860e1ca05591d4","optId":"66b9f962f3860e1ca05591dc","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"진피","prod":"[메디스트림 스탠다드] 진피, 500g, 중국","price":2900,"list":2900,"qty":2,"url":"https://market.medistream.co.kr/products/64d34f51229ecf003780546a","optId":"64d34f89229ecf0037805477","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"창출","prod":"[메디스트림 스탠다드] 창출, 500g, 중국","price":6800,"list":6800,"qty":2,"url":"https://market.medistream.co.kr/products/644f47207ab16b0053a8839e","optId":"644f4785d244ba0011fc66aa","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"천궁","prod":"[메디스트림 스탠다드] 천궁(일) ,500g, 중국","price":5200,"list":5200,"qty":2,"url":"https://market.medistream.co.kr/products/668e4285a01215f74ca702c2","optId":"6909c3500525af2f65744a8a","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"치자","prod":"[메디스트림 스탠다드] 치자(편절), 500g, 중국","price":5800,"list":5800,"qty":1,"url":"https://market.medistream.co.kr/products/6718e35e08965d9e4d185175","optId":"6718e35f08965d9e4d18517d","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"택사","prod":"[메디스트림 스탠다드] 택사, 500g, 중국","price":4900,"list":4900,"qty":1,"url":"https://market.medistream.co.kr/products/6718e3b708965d9e4d185182","optId":"6718e3b708965d9e4d18518a","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"향부자","prod":"[메디스트림 스탠다드] 향부자(절), 500g, 중국","price":4000,"list":4000,"qty":2,"url":"https://market.medistream.co.kr/products/6718e40f08965d9e4d18518f","optId":"6718e41008965d9e4d185197","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"황금","prod":"[씨케이] 황금(다년생,고금), 600g, 중국","price":11700,"list":11700,"qty":1,"url":"https://market.medistream.co.kr/products/5fb76d515120316334324b87","optId":"60e4796dae811e631eda881a","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"황련","prod":"[메디스트림 스탠다드] 황련, 500g, 중국","price":74900,"list":74900,"qty":1,"url":"https://market.medistream.co.kr/products/6718e51d08965d9e4d1851c1","optId":"6718e51e08965d9e4d1851c9","basis":"원내탕전 표준 구성"},{"cat":"원내탕전","sub":"한약재","mode":"담기","qtyMode":"fixed","nm":"후박","prod":"[메디스트림 스탠다드] 후박(거피), 500g, 중국","price":4300,"list":4300,"qty":1,"url":"https://market.medistream.co.kr/products/668e3fbfa01215f74ca70187","optId":"668e3fbfa01215f74ca7018f","basis":"원내탕전 표준 구성"}];
+
+// ── 혜택 계산 ──
+const TIERS = [[6000000,.06],[5000000,.05],[4000000,.04],[3000000,.03],[0,0]];
+const DEPOSIT = 0.04;
+const rateOf = t => (TIERS.find(x=>t>=x[0])||[0,0])[1];
+const won = n => (Math.round(n)).toLocaleString('ko-KR')+'원';
+
+// ── 수량 공식 (generate-order-v2와 동일 — 재현 검증 완료) ──
+function qtyOf(it, r1, r2){
+  if(it.qtyMode==='fixed') return Math.max(0, Math.round(it.qty||1));
+  const totalBeds = r1 + 2*r2, rooms = r1 + r2;
+  let q;
+  if(it.P==='추천수량') q = it.Q;
+  else if(it.P==='베드비례') q = it.Q * totalBeds;
+  else if(it.P==='룸비례') q = rooms * it.Q;
+  else q = it.Q;
+  return Math.max(0, Math.ceil(q));
+}
+
+// ── 설문: 카테고리 칩 ──
+const catList = document.getElementById('catList');
+META.cats.forEach(c=>{
+  const el=document.createElement('label');
+  el.className='catchip on';
+  const tagCls = c.mode==='추천' ? 'tag reco' : 'tag';
+  el.innerHTML=`<input type="checkbox" value="${c.key}" checked><span>${c.icon} ${c.key}</span><span class="${tagCls}">${c.mode}</span>`;
+  el.querySelector('input').addEventListener('change',e=>el.classList.toggle('on',e.target.checked));
+  catList.appendChild(el);
+});
+function step(id,d){
+  const el=document.getElementById(id);
+  el.value=Math.max(0,(parseInt(el.value)||0)+d);
+}
+
+let DATA=[], SURVEY={};   // DATA = 담기 항목만(계산·제출 대상)
+
+// ── 설문 → 견적 생성 ──
+function buildQuote(){
+  const name=document.getElementById('f-name').value.trim();
+  const r1=parseInt(document.getElementById('r1').value)||0;
+  const r2=parseInt(document.getElementById('r2').value)||0;
+  if(!name){ alert('성함을 입력해 주세요.'); return; }
+  const picked=[...document.querySelectorAll('#catList input:checked')].map(x=>x.value);
+  if(!picked.length){ alert('카테고리를 1개 이상 선택해 주세요.'); return; }
+  const modeOf = Object.fromEntries(META.cats.map(c=>[c.key,c.mode]));
+  const needBeds = picked.some(k=>CATALOG.some(it=>it.cat===k && it.qtyMode==='bed'));
+  if(needBeds && r1+r2===0){ alert('소모품 견적을 위해 진료실을 1개 이상 입력해 주세요.'); return; }
+
+  SURVEY={ name, date:document.getElementById('f-date').value, r1, r2, cats:picked };
+
+  // 담기 항목(계산/제출 대상)
+  DATA = CATALOG
+    .filter(it=>picked.includes(it.cat) && modeOf[it.cat]==='담기')
+    .map((it,i)=>({ ...it, id:i, qty:qtyOf(it,r1,r2), on:true }))
+    .filter(d=>d.qty>0 && d.price>0);
+
+  document.getElementById('survey').classList.add('hidden');
+  document.getElementById('quote').classList.remove('hidden');
+  document.getElementById('footbar').classList.add('show');
+  document.getElementById('pageTitle').textContent = `${name} 원장님 개원 견적`;
+  document.getElementById('pageValid').textContent = '필요 없는 품목은 체크 해제하실 수 있습니다.';
+  const totalBeds=r1+2*r2;
+  document.getElementById('condLine').textContent = `1인실 ${r1} · 2인실 ${r2} (총 ${totalBeds}베드)`;
+
+  renderSections(picked, modeOf);
+  activateTab(picked.find(k=>modeOf[k])||picked[0]);   // 첫 카테고리 활성 + 사이드바 하위 표시 동기화
+  recalc();
+  window.scrollTo(0,0);
+}
+function backToSurvey(){
+  document.getElementById('survey').classList.remove('hidden');
+  document.getElementById('quote').classList.add('hidden');
+  document.getElementById('footbar').classList.remove('show');
+  document.getElementById('pageTitle').textContent = '개원 준비 셀프 견적';
+  document.getElementById('pageValid').textContent = '몇 가지만 입력하시면 예상 견적을 바로 확인하실 수 있습니다.';
+  window.scrollTo(0,0);
+}
+
+// ── 섹션 렌더: 카테고리별 탭 + 패널 (탭 전환, 하단바·혜택은 전체 합산 유지) ──
+function renderSections(picked, modeOf){
+  const host=document.getElementById('sections');
+  const tabHost=document.getElementById('tabbarHost');
+  host.innerHTML=''; tabHost.innerHTML='';
+  const tabbar=document.createElement('div'); tabbar.className='tabbar'; tabbar.id='tabbar';
+  const panels=document.createElement('div'); panels.id='panels';
+  const cats=META.cats.filter(c=>picked.includes(c.key));
+  cats.forEach((c,idx)=>{
+    const tab=document.createElement('button');
+    tab.className='tab'+(c.mode==='추천'?' reco':'')+(idx===0?' active':'');
+    tab.dataset.cat=c.key;
+    tab.innerHTML=`<span>${c.icon} ${c.key}</span><span class="cnt" data-cnt="${c.key}">0</span>`;
+    tab.addEventListener('click',()=>activateTab(c.key));
+    tabbar.appendChild(tab);
+    const panel=document.createElement('div'); panel.className='panel'+(idx===0?' active':''); panel.dataset.cat=c.key;
+    if(c.mode==='담기') renderCartCategory(panel, c);
+    else renderRecoCategory(panel, c);
+    panels.appendChild(panel);
+  });
+  tabHost.appendChild(tabbar); host.appendChild(panels);
+  renderSidebar(cats);
+}
+function renderSidebar(cats){
+  const sb=document.getElementById('sidebar');
+  sb.innerHTML='<div class="sb-title">카테고리</div>';
+  cats.forEach((c,idx)=>{
+    const ci=document.createElement('div');
+    ci.className='sb-cat'+(c.mode==='추천'?' reco':'')+(idx===0?' active':'');
+    ci.dataset.cat=c.key;
+    ci.innerHTML=`<span>${c.icon} ${c.key}</span><span class="sbc" data-cnt="${c.key}">0</span>`;
+    ci.addEventListener('click',()=>activateTab(c.key));
+    sb.appendChild(ci);
+    if(c.mode==='담기'){
+      subListOf(c.key).forEach(sc=>{
+        const sub=sc.name;
+        const s=document.createElement('a'); s.className='sb-sub'; s.dataset.cat=c.key; s.dataset.sub=sub;
+        s.textContent=sub;
+        if(sc.url){ s.href=sc.url; s.target='_blank'; s.rel='noopener'; }   // 하위 클릭 → 마켓 해당 카테고리로 바로 이동
+        else s.addEventListener('click',()=>{ activateTab(c.key); scrollToSub(c.key,sub); });
+        sb.appendChild(s);
+      });
+    }
+  });
+}
+function activateTab(key){
+  document.querySelectorAll('#tabbar .tab').forEach(t=>t.classList.toggle('active',t.dataset.cat===key));
+  document.querySelectorAll('#panels .panel').forEach(p=>p.classList.toggle('active',p.dataset.cat===key));
+  document.querySelectorAll('#sidebar .sb-cat').forEach(t=>t.classList.toggle('active',t.dataset.cat===key));
+  document.querySelectorAll('#sidebar .sb-sub').forEach(s=>s.style.display=(s.dataset.cat===key?'block':'none'));
+}
+function renderCouponTiers(){
+  const el=document.getElementById('ctiers');
+  if(el.children.length) return;   // 1회만 생성
+  TIERS.filter(t=>t[0]>0).slice().reverse().forEach(([min,rate])=>{
+    const c=document.createElement('div'); c.className='ctier'; c.dataset.min=min;
+    c.innerHTML=`<div class="amt">${(min/10000).toLocaleString()}만↑</div><div class="pct">${Math.round(rate*100)}%</div>`;
+    el.appendChild(c);
+  });
+}
+function scrollToSub(cat,sub){
+  const el=document.querySelector(`#panels .group[data-cat="${CSS.escape(cat)}"][data-sub="${CSS.escape(sub)}"]`);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function refreshTabBadges(){
+  document.querySelectorAll('[data-cnt]').forEach(b=>{
+    const key=b.dataset.cnt;
+    const meta=META.cats.find(c=>c.key===key);
+    if(meta && meta.mode==='담기') b.textContent=DATA.filter(d=>d.cat===key && d.on).length;
+    else b.textContent=CATALOG.filter(x=>x.cat===key).length;
+  });
+}
+
+function subListOf(catKey){
+  const defs=(META.subcats&&META.subcats[catKey])||[];
+  const extra=[...new Set(DATA.filter(d=>d.cat===catKey).map(d=>d.sub))].filter(s=>!defs.some(d=>d.name===s));
+  return [...defs, ...extra.map(s=>({name:s,url:''}))];
+}
+function renderCartCategory(host, c){
+  const subList=subListOf(c.key);
+  if(!subList.length){ host.innerHTML='<div class="reco-note">표시할 품목이 없습니다.</div>'; return; }
+  // 본문은 우리 품목이 있는 분류만 (빈 분류·마켓 링크는 사이드바가 담당)
+  const withItems=subList.filter(sc=>DATA.some(d=>d.cat===c.key && d.sub===sc.name));
+  if(!withItems.length){ host.innerHTML='<div class="reco-note">표시할 품목이 없습니다.</div>'; return; }
+  withItems.forEach(sc=>{
+    const sub=sc.name;
+    const items=DATA.filter(d=>d.cat===c.key && d.sub===sub);
+    const g=document.createElement('div');
+    g.className='group';
+    g.dataset.cat=c.key; g.dataset.sub=sub;
+
+    g.innerHTML=`
+      <div class="ghead">
+        <span class="arrow">▼</span>
+        <span class="gname">${sub}</span>
+        <span class="gcount">(${items.length})</span>
+        <button class="gall">전체 선택/해제</button>
+      </div>
+      <div class="gbody"></div>`;
+    const body=g.querySelector('.gbody');
+    items.forEach(d=>{
+      const row=document.createElement('div');
+      row.className='item'; row.dataset.id=d.id;
+      row.innerHTML=`
+        <input type="checkbox" ${d.on?'checked':''}>
+        <div class="info">
+          <div class="nm">${d.nm}</div>
+          <div class="pr">${d.url?`<a href="${d.url}" target="_blank" rel="noopener">${d.prod}</a>`:d.prod}</div>
+          <div class="unitpr">단가 ${won(d.price)}</div>
+        </div>
+        <div class="amt">
+          <div class="qstep"><button class="qminus" aria-label="수량 감소">−</button><span class="qv">${d.qty}</span><button class="qplus" aria-label="수량 증가">+</button></div>
+          <div class="p">${won(d.price*d.qty)}</div>
+        </div>`;
+      const qvEl=row.querySelector('.qv'), pEl=row.querySelector('.p');
+      const paintRow=()=>{
+        qvEl.textContent=d.qty;
+        pEl.textContent=won(d.price*d.qty);
+      };
+      paintRow();
+      row.querySelector('input').addEventListener('change',e=>{d.on=e.target.checked;row.classList.toggle('off',!d.on);recalc();});
+      row.querySelector('.qminus').addEventListener('click',()=>{ d.qty=Math.max(1,d.qty-1); paintRow(); recalc(); });
+      row.querySelector('.qplus').addEventListener('click',()=>{ d.qty=d.qty+1; paintRow(); recalc(); });
+      body.appendChild(row);
+    });
+    g.querySelector('.ghead').addEventListener('click',e=>{ if(e.target.classList.contains('gall')||e.target.classList.contains('mkt'))return; g.classList.toggle('collapsed');});
+    g.querySelector('.gall').addEventListener('click',()=>{
+      const anyOff=items.some(d=>!d.on);
+      items.forEach(d=>{d.on=anyOff;});
+      body.querySelectorAll('.item').forEach(r=>{const d=DATA[r.dataset.id];r.querySelector('input').checked=d.on;r.classList.toggle('off',!d.on);});
+      recalc();
+    });
+    host.appendChild(g);
+  });
+}
+
+function renderRecoCategory(host, c){
+  const mine=CATALOG.filter(x=>x.cat===c.key);
+  const note=document.createElement('div');
+  note.className='reco-note';
+  note.textContent='추천 상품입니다. 관심 있으시면 담당 매니저가 별도로 견적을 도와드립니다.';
+  host.appendChild(note);
+  if(!mine.length){
+    const g=document.createElement('div'); g.className='group';
+    g.innerHTML='<div class="item"><div class="info"><div class="pr">추천 리스트 준비 중입니다.</div></div></div>';
+    host.appendChild(g); return;
+  }
+  const g=document.createElement('div'); g.className='group';
+  const body=document.createElement('div'); body.className='gbody';
+  mine.forEach((x,i)=>{
+    const row=document.createElement('div'); row.className='item reco';
+    row.innerHTML=`
+      <div class="rank">${i+1}</div>
+      <div class="info">
+        <div class="nm">${x.nm}</div>
+        <div class="pr">${x.url?`<a href="${x.url}" target="_blank" rel="noopener">${x.prod}</a>`:x.prod}</div>
+      </div>
+      <div class="amt"><div class="p">${x.price?won(x.price):''}</div></div>`;
+    body.appendChild(row);
+  });
+  g.appendChild(body); host.appendChild(g);
+}
+
+// ── 재계산 (담기 항목만) ──
+function recalc(){
+  const on=DATA.filter(d=>d.on);
+  const sale=on.reduce((s,d)=>s+d.price*d.qty,0);
+  const rate=rateOf(sale);
+  const couponDisc=Math.round(sale*rate);
+  const afterCoupon=sale-couponDisc;
+  const depositDisc=Math.round(afterCoupon*DEPOSIT);
+  const finalDeposit=afterCoupon-depositDisc;
+  const totalDisc=sale-finalDeposit;   // 쿠폰+예치금 총 할인
+
+  // 히어로: 총 합계 → 턴키 추가할인(%)
+  document.getElementById('v-total').textContent=won(sale);
+  document.getElementById('v-coupon-pct').textContent=`${Math.round(rate*100)}%`;
+  document.getElementById('v-after').textContent=won(afterCoupon);
+  document.getElementById('v-deposit').textContent=won(finalDeposit);
+  document.getElementById('v-chip').textContent = totalDisc>0
+    ? `🎁 쿠폰·예치금으로 총 ${won(totalDisc)} 할인됩니다`
+    : `🎁 300만원 이상 담으면 추가 할인이 시작됩니다`;
+
+  const nEl=document.getElementById('nudge'),bar=document.getElementById('nudge-bar'),txt=document.getElementById('nudge-txt');
+  const next=TIERS.filter(t=>t[0]>sale).sort((a,b)=>a[0]-b[0])[0];
+  if(next){
+    const need=next[0]-sale;
+    const prev=TIERS.filter(t=>t[0]<=sale).sort((a,b)=>b[0]-a[0])[0][0];
+    const pct=Math.max(6,Math.min(100,Math.round((sale-prev)/(next[0]-prev)*100)));
+    bar.style.width=pct+'%'; nEl.classList.remove('done');
+    txt.innerHTML=`현재 ${won(sale)} · <b>${won(need)}</b> 더 담으면 ${Math.round(next[1]*100)}% 할인!`;
+  } else {
+    bar.style.width='100%'; nEl.classList.add('done');
+    txt.innerHTML=`🎉 최대 할인 ${Math.round(rate*100)}% 적용 중입니다!`;
+  }
+
+  // 쿠폰 구간표: 현재 적용 구간 강조
+  renderCouponTiers();
+  const activeMin=(TIERS.find(t=>sale>=t[0])||[0])[0];
+  document.querySelectorAll('#ctiers .ctier').forEach(c=>c.classList.toggle('active',Number(c.dataset.min)===activeMin));
+
+  // 하단바: 총 X → 할인 Y → 최종 Z
+  document.getElementById('foot-break').innerHTML = totalDisc>0
+    ? `총 <b>${won(sale)}</b> → <span class="disc">${won(totalDisc)} 할인</span>`
+    : `선택 ${on.length}품목 · 총 <b>${won(sale)}</b>`;
+  document.getElementById('foot-amt').textContent=won(finalDeposit);
+  refreshTabBadges();
+}
+
+// ── 제출 ──
+let SUBMITTED=false;
+async function submitOrder(){
+  if(SUBMITTED) return;
+  const on=DATA.filter(d=>d.on);
+  if(!on.length){ alert('선택된 품목이 없습니다.'); return; }
+  const sale=on.reduce((s,d)=>s+d.price*d.qty,0);
+  const rate=rateOf(sale);
+  const finalDeposit=Math.round((sale-Math.round(sale*rate))*(1-DEPOSIT));
+  const recoInterest=SURVEY.cats.filter(k=>{
+    const m=META.cats.find(c=>c.key===k); return m && m.mode==='추천';
+  });
+
+  const payload={
+    doctor:SURVEY.name, openingDate:SURVEY.date||'',
+    beds:{ '1인실':SURVEY.r1, '2인실':SURVEY.r2, total:SURVEY.r1+2*SURVEY.r2 },
+    cats:SURVEY.cats, recoInterest, submittedAt:new Date().toISOString(),
+    saleTotal:sale, couponRate:rate, finalDeposit,
+    items:on.map(d=>({ 카테고리:d.cat, 옵션ID:d.optId, 물품명:d.nm, 상품명:d.prod, 수량:d.qty, 판매가:d.price })),
+  };
+
+  const btn=document.querySelector('.footbar button');
+  if(btn){ btn.disabled=true; btn.textContent='전송 중…'; }
+  if(META.gasUrl){
+    try{
+      await fetch(META.gasUrl,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
+    }catch(e){
+      if(btn){ btn.disabled=false; btn.textContent='이대로 주문 요청하기 →'; }
+      alert('전송 중 문제가 발생했습니다. 잠시 후 다시 시도하거나 담당 매니저에게 알려주세요.');
+      return;
+    }
+  }
+  SUBMITTED=true;
+  document.getElementById('modal-count').textContent=`${on.length}품목`;
+  document.getElementById('modal-amt').textContent=won(finalDeposit);
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+</script>
+</body>
+</html>
