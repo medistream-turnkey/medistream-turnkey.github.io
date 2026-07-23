@@ -227,6 +227,11 @@
     </div>
 
     <div class="field">
+      <label>전화번호 뒷 4자리 <span class="hint">동명이인 구분용</span></label>
+      <input type="text" id="f-phone4" placeholder="예: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
+    </div>
+
+    <div class="field">
       <label>개원 예정일 <span class="hint">선택</span></label>
       <input type="date" id="f-date">
     </div>
@@ -408,7 +413,8 @@ function buildQuote(){
   const needBeds = picked.some(k=>CATALOG.some(it=>it.cat===k && it.qtyMode==='bed'));
   if(needBeds && r1+r2===0){ alert('소모품 견적을 위해 진료실을 1개 이상 입력해 주세요.'); return; }
 
-  SURVEY={ name, date:document.getElementById('f-date').value, r1, r2, cats:picked };
+  const phone4=(document.getElementById('f-phone4').value||'').replace(/\D/g,'').slice(0,4);
+  SURVEY={ name, phone4, date:document.getElementById('f-date').value, r1, r2, cats:picked };
 
   // 담기 항목(계산/제출 대상)
   DATA = CATALOG
@@ -699,7 +705,7 @@ async function submitOrder(){
   });
 
   const payload={
-    doctor:SURVEY.name, openingDate:SURVEY.date||'',
+    doctor:SURVEY.name, phone4:SURVEY.phone4||'', openingDate:SURVEY.date||'',
     beds:{ '1인실':SURVEY.r1, '2인실':SURVEY.r2, total:SURVEY.r1+2*SURVEY.r2 },
     cats:SURVEY.cats, recoInterest, submittedAt:new Date().toISOString(),
     saleTotal:sale, couponRate:rate, finalDeposit,
