@@ -715,7 +715,7 @@ function renderCartCategory(host, c){
       paintRow();
       row.querySelector('input').addEventListener('change',e=>{d.on=e.target.checked;row.classList.toggle('off',!d.on);recalc();});
       row.querySelector('.qminus').addEventListener('click',()=>{ d.qty=Math.max(1,d.qty-1); paintRow(); recalc(); });
-      row.querySelector('.qplus').addEventListener('click',()=>{ d.qty=d.qty+1; paintRow(); recalc(); });
+      row.querySelector('.qplus').addEventListener('click',()=>{ d.qty=Math.min(300,d.qty+1); paintRow(); recalc(); });
       if(hasVariants){
         const sel=row.querySelector('.optsel');
         d.variants.forEach(v=>{
