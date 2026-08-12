@@ -214,6 +214,21 @@
   .modal .x button{background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-weight:700;cursor:pointer;}
   .modal .box.guide{text-align:center;}
   .modal .box.guide h3{margin:0 0 16px;font-size:18px;}
+  .modal .box.review{max-width:480px;text-align:left;}
+  .modal .box.review h3{text-align:center;margin:0 0 4px;}
+  .modal .box.review .review-hint{text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:14px;}
+  .review-list{max-height:48vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:2px 13px;margin-bottom:12px;}
+  .review-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);}
+  .review-row:last-child{border-bottom:none;}
+  .review-row .rnm{font-size:13px;font-weight:600;color:var(--ink);}
+  .review-row .rsub{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .review-row .ramt{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--ink);}
+  .review-total{display:flex;justify-content:space-between;align-items:baseline;padding:8px 3px 14px;font-weight:800;font-size:15px;border-top:1px solid var(--line);margin-top:2px;}
+  .review-total .val{color:var(--green-dark);font-size:19px;font-variant-numeric:tabular-nums;}
+  .review-actions{display:flex;gap:10px;margin-top:0;}
+  .review-actions button{flex:1;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;}
+  .review-actions .ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .review-actions .go{background:var(--green);color:#fff;border:none;}
   .guide-list{list-style:none;padding:0;margin:0;text-align:left;}
   .guide-list li{position:relative;padding:9px 12px 9px 30px;font-size:13.5px;line-height:1.55;color:var(--ink);background:var(--green-soft);border-radius:10px;margin-bottom:8px;}
   .guide-list li::before{content:"›";position:absolute;left:13px;top:8px;color:var(--green);font-weight:800;}
@@ -326,7 +341,21 @@
       <div class="fb-break" id="foot-break">-</div>
       <div class="m" id="foot-amt">-</div>
     </div>
-    <button onclick="submitOrder()">이 금액으로 주문 요청 →</button>
+    <button onclick="openReview()">이 금액으로 주문 요청 →</button>
+  </div>
+</div>
+
+<!-- 제출 전 최종 확인 -->
+<div class="modal" id="reviewModal">
+  <div class="box review">
+    <h3>이대로 제출할까요?</h3>
+    <div class="review-hint">담으신 품목을 다시 한번 확인해 주세요</div>
+    <div class="review-list" id="review-list"></div>
+    <div class="review-total"><span>합계</span><span class="val" id="review-total-amt">-</span></div>
+    <div class="review-actions">
+      <button type="button" class="ghost" onclick="closeReview()">← 더 담을게요</button>
+      <button type="button" class="go" id="reviewGoBtn" onclick="confirmSubmit()">이대로 제출할게요</button>
+    </div>
   </div>
 </div>
 
@@ -769,9 +798,11 @@ function recalc(){
   refreshTabBadges();
 }
 
-// ── 제출 ──
+// ── 제출 전 최종 확인 ──
+// 카테고리 탭을 여러 개 오가며 체크만 하다 보면 뭘 담았는지 한눈에 다시 보기 어려워서,
+// 제출 직전에 담은 품목 전체를 한 번 더 보여주고 확인받는다(2026-08-12, 실수 방지).
 let SUBMITTED=false;
-async function submitOrder(){
+function openReview(){
   if(SUBMITTED) return;
   const on=DATA.filter(d=>d.on);
   if(!on.length){
@@ -779,6 +810,28 @@ async function submitOrder(){
     window.scrollTo({top:0,behavior:'smooth'});
     return;
   }
+  const sale=on.reduce((s,d)=>s+d.price*d.qty,0);
+  const rate=rateOf(sale);
+  const finalDeposit=Math.round((sale-Math.round(sale*rate))*(1-DEPOSIT));
+
+  const list=document.getElementById('review-list');
+  list.innerHTML='';
+  on.forEach(d=>{
+    const row=document.createElement('div');
+    row.className='review-row';
+    row.innerHTML=`
+      <div><div class="rnm">${d.prod}</div><div class="rsub">${d.cat} · ${won(d.price)} × ${d.qty}개</div></div>
+      <div class="ramt">${won(d.price*d.qty)}</div>`;
+    list.appendChild(row);
+  });
+  document.getElementById('review-total-amt').textContent=won(finalDeposit);
+  document.getElementById('reviewModal').classList.add('show');
+}
+function closeReview(){ document.getElementById('reviewModal').classList.remove('show'); }
+
+async function confirmSubmit(){
+  if(SUBMITTED) return;
+  const on=DATA.filter(d=>d.on);
   const sale=on.reduce((s,d)=>s+d.price*d.qty,0);
   const rate=rateOf(sale);
   const finalDeposit=Math.round((sale-Math.round(sale*rate))*(1-DEPOSIT));
@@ -793,19 +846,21 @@ async function submitOrder(){
     items:on.map(d=>({ 카테고리:d.cat, 옵션ID:d.optId, 물품명:d.nm, 상품명:d.prod, 수량:d.qty, 판매가:d.price })),
   };
 
-  const btn=document.querySelector('.footbar button');
-  if(btn){ btn.disabled=true; btn.textContent='전송 중…'; }
+  const revBtn=document.getElementById('reviewGoBtn');
+  const footBtn=document.querySelector('.footbar button');
+  if(revBtn){ revBtn.disabled=true; revBtn.textContent='전송 중…'; }
   if(META.gasUrl){
     try{
       await fetch(META.gasUrl,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) });
     }catch(e){
-      if(btn){ btn.disabled=false; btn.textContent='이대로 주문 요청하기 →'; }
+      if(revBtn){ revBtn.disabled=false; revBtn.textContent='이대로 제출할게요'; }
       alert('전송 중 문제가 발생했습니다. 잠시 후 다시 시도하거나 담당 매니저에게 알려주세요.');
       return;
     }
   }
   SUBMITTED=true;
-  if(btn) btn.textContent='제출 완료 ✓';
+  if(footBtn) footBtn.textContent='제출 완료 ✓';
+  closeReview();
   document.getElementById('modal-count').textContent=`카테고리(${SURVEY.cats.join(', ')})`;
   document.getElementById('modal-amt').textContent=won(finalDeposit);
   document.getElementById('modal').classList.add('show');
