@@ -220,7 +220,8 @@
   .review-list{max-height:48vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:2px 13px;margin-bottom:12px;}
   .review-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);}
   .review-row:last-child{border-bottom:none;}
-  .review-row .rnm{font-size:13px;font-weight:600;color:var(--ink);}
+  .review-row .rinfo{flex:1;min-width:0;}
+  .review-row .rnm{font-size:13px;font-weight:600;color:var(--ink);overflow-wrap:break-word;}
   .review-row .rsub{font-size:11.5px;color:var(--muted);margin-top:1px;}
   .review-row .ramt{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--ink);}
   .review-total{display:flex;justify-content:space-between;align-items:baseline;padding:8px 3px 14px;font-weight:800;font-size:15px;border-top:1px solid var(--line);margin-top:2px;}
@@ -821,7 +822,7 @@ function openReview(){
     const row=document.createElement('div');
     row.className='review-row';
     row.innerHTML=`
-      <div><div class="rnm">${d.prod}</div><div class="rsub">${d.cat} · ${won(d.price)} × ${d.qty}개</div></div>
+      <div class="rinfo"><div class="rnm">${d.prod}</div><div class="rsub">${d.cat} · ${won(d.price)} × ${d.qty}개</div></div>
       <div class="ramt">${won(d.price*d.qty)}</div>`;
     list.appendChild(row);
   });
