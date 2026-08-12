@@ -246,12 +246,12 @@
     </div>
 
     <div class="field">
-      <label>전화번호 뒷 4자리 <span class="hint">정확한 주문 확인용 (선택)</span></label>
+      <label>전화번호 뒷 4자리 <span class="hint">정확한 주문 확인용</span></label>
       <input type="text" id="f-phone4" placeholder="예: 1234" inputmode="numeric" maxlength="4" autocomplete="off">
     </div>
 
     <div class="field">
-      <label>개원 예정일 <span class="hint">선택, 직접 입력 또는 달력에서 선택</span></label>
+      <label>개원 예정일 <span class="hint">직접 입력 또는 달력에서 선택</span></label>
       <div class="datewrap">
         <input type="text" id="f-date" placeholder="예: 2026-09-01" inputmode="numeric" maxlength="10" autocomplete="off">
         <button type="button" class="datepick" id="f-date-pick" aria-label="달력에서 선택">📅</button>
@@ -461,6 +461,10 @@ async function buildQuote(){
   const r1=parseInt(document.getElementById('r1').value)||0;
   const r2=parseInt(document.getElementById('r2').value)||0;
   if(!name){ alert('성함을 입력해 주세요.'); return; }
+  const phone4Raw=(document.getElementById('f-phone4').value||'').replace(/\D/g,'').slice(0,4);
+  if(phone4Raw.length!==4){ alert('전화번호 뒷 4자리를 입력해 주세요.'); return; }
+  const dateRaw=document.getElementById('f-date').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateRaw)){ alert('개원 예정일을 입력해 주세요.'); return; }
   // 최신 카탈로그(구글시트) 응답을 기다린다 — 안 그러면 방금 추가한 품목이 안 보일 수 있음
   if(!catalogSettled){
     const btn=document.getElementById('goBtn');
@@ -475,8 +479,7 @@ async function buildQuote(){
   const needBeds = picked.some(k=>CATALOG.some(it=>it.cat===k && it.qtyMode==='bed'));
   if(needBeds && r1+r2===0){ alert('소모품 견적을 위해 진료실을 1개 이상 입력해 주세요.'); return; }
 
-  const phone4=(document.getElementById('f-phone4').value||'').replace(/\D/g,'').slice(0,4);
-  SURVEY={ name, phone4, date:document.getElementById('f-date').value, r1, r2, cats:picked };
+  SURVEY={ name, phone4:phone4Raw, date:dateRaw, r1, r2, cats:picked };
 
   // 담기·추천 모두 계산/제출 대상 (2026-07-30: 가전·의류도 체크하면 장바구니에 담기도록 통합)
   DATA = CATALOG
