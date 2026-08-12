@@ -805,6 +805,7 @@ async function submitOrder(){
     }
   }
   SUBMITTED=true;
+  if(btn) btn.textContent='제출 완료 ✓';
   document.getElementById('modal-count').textContent=`카테고리(${SURVEY.cats.join(', ')})`;
   document.getElementById('modal-amt').textContent=won(finalDeposit);
   document.getElementById('modal').classList.add('show');
